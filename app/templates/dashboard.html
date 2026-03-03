@@ -536,23 +536,7 @@
             }
         }
 
-        /* ====== МОБИЛЬНЫЙ UI — скрываем второстепенные табы ====== */
-        @media (max-width: 768px) {
-            .nav-tab-secondary {
-                display: none;
-            }
-            .nav-tab-secondary.mob-visible {
-                display: inline-flex;
-            }
-            .mob-more-btn {
-                display: inline-flex !important;
-            }
-        }
-        @media (min-width: 769px) {
-            .mob-more-btn {
-                display: none !important;
-            }
-        }
+        /* ====== МОБИЛЬНЫЙ UI — ПРЕМИУМ ====== */
         .mob-more-btn {
             display: none;
             align-items: center;
@@ -570,6 +554,134 @@
             user-select: none;
         }
         .mob-more-btn:hover { background: rgba(124,106,240,0.25); }
+
+        @media (min-width: 769px) {
+            .mob-more-btn { display: none !important; }
+        }
+
+        @media (max-width: 768px) {
+            /* Скрываем графики */
+            .mob-chart-section { display: none !important; }
+
+            /* Скрываем второстепенные табы */
+            .nav-tab-secondary { display: none; }
+            .nav-tab-secondary.mob-visible { display: inline-flex; }
+            .mob-more-btn { display: inline-flex !important; }
+
+            /* HEADER — компактный */
+            .header {
+                padding: 10px 16px;
+                gap: 8px;
+            }
+            .header h1 {
+                font-size: 16px;
+                white-space: nowrap;
+            }
+            .header-controls {
+                gap: 6px;
+            }
+            .header-controls span { display: none; }
+            .header-controls input[type="date"] {
+                font-size: 12px;
+                padding: 6px 8px;
+                width: 130px;
+            }
+            .header-controls .btn-primary {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+
+            /* TABS — горизонтальный скролл, фиксированный снизу */
+            .nav-tabs {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                top: auto !important;
+                z-index: 200;
+                display: flex;
+                overflow-x: auto;
+                background: var(--bg2);
+                border-top: 1px solid var(--bg4);
+                border-bottom: none;
+                padding: 6px 8px;
+                gap: 4px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .nav-tabs::-webkit-scrollbar { display: none; }
+
+            .nav-tab {
+                flex: 0 0 auto;
+                font-size: 11px;
+                padding: 8px 12px;
+                border-radius: 20px;
+                white-space: nowrap;
+                border: 1px solid transparent;
+            }
+            .nav-tab.active {
+                background: var(--accent);
+                color: #fff;
+                border-color: var(--accent);
+            }
+            .mob-more-btn {
+                flex: 0 0 auto;
+                font-size: 11px;
+                padding: 8px 12px;
+                border-radius: 20px;
+            }
+
+            /* Контент — отступ снизу под навигацию */
+            .main {
+                padding: 12px 12px 80px 12px;
+            }
+
+            /* KPI карточки — 2 в ряд */
+            .grid-5, .grid-4 {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px;
+            }
+            .grid-3, .grid-2 {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Карточки */
+            .card {
+                padding: 14px;
+                border-radius: 14px;
+            }
+            .kpi-value {
+                font-size: 22px !important;
+            }
+            .card-title {
+                font-size: 11px;
+                margin-bottom: 8px;
+            }
+
+            /* Таблицы — горизонтальный скролл */
+            .table-wrap, table {
+                overflow-x: auto;
+                display: block;
+                font-size: 12px;
+            }
+            th, td {
+                padding: 8px 10px !important;
+                white-space: nowrap;
+            }
+
+            /* Кнопки — крупнее для тач */
+            .btn {
+                font-size: 13px;
+                padding: 10px 16px;
+                min-height: 40px;
+            }
+
+            /* AI блок */
+            .glass-panel {
+                padding: 12px !important;
+                border-radius: 12px !important;
+            }
+        }
     </style>
 </head>
 
@@ -664,7 +776,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-2">
+            <div class="grid grid-2 mob-chart-section">
                 <div class="card">
                     <div class="card-title">Выручка vs Прибыль (7 дней)</div>
                     <div id="chartTrend" style="height:320px;"></div>
@@ -674,7 +786,7 @@
                     <div id="chartTop" style="height:320px;"></div>
                 </div>
             </div>
-            <div class="grid grid-1">
+            <div class="grid grid-1 mob-chart-section">
                 <div class="card">
                     <div class="card-title">Продажи по категориям</div>
                     <div id="chartCat" style="height:320px;"></div>
@@ -682,7 +794,7 @@
             </div>
             <!-- График критических остатков убран - можно добавить в отдельную вкладку Склад -->
 
-            <div class="grid grid-1">
+            <div class="grid grid-1 mob-chart-section">
                 <div class="card">
                     <div class="card-title">Расход топ-5 ингредиентов (7 дней)</div>
                     <div id="chartUsage" style="height:300px;"></div>
