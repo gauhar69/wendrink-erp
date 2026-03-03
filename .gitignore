@@ -54,6 +54,10 @@ wendrink.db-shm
 wendrink.db-wal
 wendrink.db-journal
 
+# Excel исходники с данными
+*.xlsx
+*.xls
+
 # OS
 .DS_Store
 Thumbs.db
