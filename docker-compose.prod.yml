@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  wendrink:
+  n8n:
     build: .
     image: wendrink-erp:latest
     container_name: wendrink_app
@@ -20,6 +20,6 @@ services:
     restart: always
     command: tunnel --no-autoupdate run --token ${CF_TOKEN}
     depends_on:
-      - wendrink
+      - n8n
 
 volumes: {}
