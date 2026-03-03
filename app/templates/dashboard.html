@@ -676,6 +676,18 @@
 
         /* === МОБИЛЬНЫЙ МЕДИА-ЗАПРОС === */
         @media (max-width: 768px) {
+            /* ПРЕМИУМ ЦВЕТА — чуть светлее на мобиле */
+            :root {
+                --bg: #141820;
+                --bg2: #1c2132;
+                --bg3: #252b3d;
+                --bg4: #313848;
+                --accent: #7c6af0;
+                --accent2: #b0a4ff;
+                --shadow: 0 4px 28px rgba(0,0,0,0.4);
+            }
+            body { background: linear-gradient(160deg, #141820 0%, #1a1d2e 100%) !important; }
+
             /* Показываем мобильные элементы */
             .mob-hamburger { display: flex !important; }
             .mob-refresh-btn { display: flex !important; }
@@ -756,6 +768,64 @@
 
             /* AI панель */
             .glass-panel { padding: 12px !important; border-radius: 12px !important; }
+
+            /* KPI значения — не разрывать число и ₸ */
+            .kpi-value {
+                font-size: 19px !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Ввод за день — навигация в одну строку */
+            #daily-input-section > div:first-child {
+                display: grid !important;
+                grid-template-columns: 1fr auto 1fr auto !important;
+                gap: 6px !important;
+                align-items: center;
+            }
+            #daily-input-section > div:first-child #diDateLabel { display: none; }
+            #daily-input-section > div:first-child #diStatus {
+                grid-column: 1 / -1;
+                margin-left: 0 !important;
+                text-align: center;
+            }
+
+            /* Склад — суб-кнопки без переноса текста */
+            #warehouse-section > div:first-child {
+                flex-wrap: nowrap !important;
+                gap: 6px !important;
+            }
+            #warehouse-section > div:first-child button {
+                font-size: 11px !important;
+                padding: 7px 8px !important;
+                white-space: nowrap;
+                flex: 1;
+            }
+            #warehouse-section > div:first-child button:last-child {
+                flex: 0 0 auto;
+            }
+
+            /* Склад — вторая строка (дата + кнопки) компактно */
+            #whDayView > div:first-child {
+                gap: 6px !important;
+                flex-wrap: wrap !important;
+            }
+            #whDayView > div:first-child button {
+                font-size: 12px !important;
+                padding: 7px 10px !important;
+            }
+
+            /* Все inline-flex и flex контейнеры в разделах — flex-wrap */
+            .tab-section > div[style*="display:flex"] {
+                flex-wrap: wrap;
+            }
+
+            /* Аналитика — период кнопки компактные */
+            #analytics-section .btn {
+                font-size: 12px !important;
+                padding: 8px 12px !important;
+            }
         }
     </style>
 </head>
