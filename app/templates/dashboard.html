@@ -979,49 +979,46 @@
             <!-- Основные показатели -->
             <div id="anResults" style="display:none;">
                 <div class="grid grid-5">
-                    <div class="card">
-                        <div class="card-title">💰 Выручка</div>
+                    <div class="card accent-blue">
+                        <div class="card-title">Выручка</div>
                         <div class="kpi-value" id="anRevenue" style="color:var(--blue)">—</div>
                         <div class="kpi-sub" id="anRevenueSub"></div>
                     </div>
-                    <div class="card">
-                        <div class="card-title">📦 Себестоимость</div>
+                    <div class="card accent-orange">
+                        <div class="card-title">Себестоимость</div>
                         <div class="kpi-value" id="anCogs" style="color:var(--orange)">—</div>
                         <div class="kpi-sub" id="anCogsSub"></div>
                     </div>
-                    <div class="card">
-                        <div class="card-title">🗑️ Списания</div>
-                        <div class="kpi-value" id="anWaste" style="color:var(--pink)">—</div>
-                        <div class="kpi-sub" id="anWasteSub"></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">💵 Вал. прибыль</div>
+                    <div class="card accent-accent2">
+                        <div class="card-title">Вал. прибыль</div>
                         <div class="kpi-value" id="anGross" style="color:var(--accent2)">—</div>
                         <div class="kpi-sub" id="anGrossSub"></div>
                     </div>
-                    <div class="card">
-                        <div class="card-title">💸 Расходы (OPEX)</div>
+                    <div class="card accent-pink">
+                        <div class="card-title">Расходы (OPEX)</div>
                         <div class="kpi-value" id="anOpex" style="color:var(--pink)">—</div>
                         <div class="kpi-sub" id="anOpexSub"></div>
                     </div>
-                </div>
-
-                <div class="grid grid-4">
-                    <div class="card">
-                        <div class="card-title">✨ Чист. прибыль</div>
+                    <div class="card accent-green">
+                        <div class="card-title">Чист. прибыль</div>
                         <div class="kpi-value" id="anNet" style="color:var(--green)">—</div>
                         <div class="kpi-sub" id="anNetSub"></div>
                     </div>
                     <div class="card">
-                        <div class="card-title">📊 Маржа валовая</div>
+                        <div class="card-title">Маржа валовая</div>
                         <div class="kpi-value" id="anGrossMargin" style="color:var(--yellow)">—</div>
                     </div>
                     <div class="card">
-                        <div class="card-title">📊 Маржа чистая</div>
+                        <div class="card-title">Маржа чистая</div>
                         <div class="kpi-value" id="anNetMargin" style="color:var(--green)">—</div>
                     </div>
                     <div class="card">
-                        <div class="card-title">🧾 Чеков</div>
+                        <div class="card-title">Списания</div>
+                        <div class="kpi-value" id="anWaste" style="color:var(--pink)">—</div>
+                        <div class="kpi-sub" id="anWasteSub"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Чеков</div>
                         <div class="kpi-value" id="anTxCount" style="color:var(--cyan)">—</div>
                         <div class="kpi-sub" id="anAvgCheck"></div>
                     </div>
@@ -4000,9 +3997,9 @@
             const opex = data.opex_total || (data.opex ? data.opex.total : '0');
             $('anOpex').textContent = fmtM(opex);
 
-            $('anNet').textContent = fmtM(data.net_profit);
-            $('anGrossMargin').textContent = data.gross_margin_percent + '%';
-            $('anNetMargin').textContent = data.net_margin_percent + '%';
+            $('anNet').textContent = fmtM(parseFloat(data.net_profit) || 0);
+            $('anGrossMargin').textContent = (parseFloat(data.gross_margin_percent) || 0).toFixed(1) + '%';
+            $('anNetMargin').textContent = (parseFloat(data.net_margin_percent) || 0).toFixed(1) + '%';
 
             // Транзакции и средний чек
             const txCount = data.transaction_count || 0;
