@@ -1,0 +1,23 @@
+# WENDRINK ERP - Production Requirements
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+jinja2>=3.1.2
+
+# Database
+sqlalchemy[asyncio]>=2.0.25
+aiosqlite>=0.19.0
+asyncpg>=0.29.0
+alembic>=1.13.0
+
+# Validation & Settings
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Utilities
+python-dotenv>=1.0.0
+
+# Visualization (for charts)
+matplotlib>=3.8.0
+plotly>=5.18.0
