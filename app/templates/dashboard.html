@@ -549,15 +549,16 @@
 
         /* === БОКОВОЕ МЕНЮ (DRAWER) === */
         .mob-drawer-overlay {
-            display: none;
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.65);
             z-index: 299;
             opacity: 0;
+            pointer-events: none;
             transition: opacity 0.3s;
         }
-        .mob-drawer-overlay.open { opacity: 1; }
+        .mob-drawer-overlay.open { opacity: 1; pointer-events: all; }
+        @media (min-width: 769px) { .mob-drawer-overlay, .mob-drawer { display: none !important; } }
 
         .mob-drawer {
             position: fixed;
@@ -897,7 +898,7 @@
                     <div class="kpi-sub" id="kCogsSub"></div>
                 </div>
                 <div class="card accent-accent2">
-                    <div class="card-title">Брутто</div>
+                    <div class="card-title">Валовая прибыль</div>
                     <div class="kpi-value" id="kGross">—</div>
                     <div class="kpi-sub">
                         <span id="kGrossSub"></span>
@@ -905,12 +906,12 @@
                     </div>
                 </div>
                 <div class="card accent-pink">
-                    <div class="card-title">OPEX</div>
+                    <div class="card-title">OPEX (Расходы)</div>
                     <div class="kpi-value" id="kOpex">—</div>
                     <div class="kpi-sub" id="kOpexSub"></div>
                 </div>
                 <div class="card accent-green">
-                    <div class="card-title">Нетто</div>
+                    <div class="card-title">Чистая прибыль</div>
                     <div class="kpi-value" id="kProfit">—</div>
                     <div class="kpi-sub">
                         <span id="kProfitSub"></span>
