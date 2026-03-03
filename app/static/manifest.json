@@ -2,7 +2,7 @@
   "name": "WENDRINK ERP",
   "short_name": "WENDRINK",
   "description": "Система управления кафе WENDRINK — Алматы",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#1a1a2e",
   "theme_color": "#7c6af0",
