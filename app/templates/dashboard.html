@@ -536,151 +536,225 @@
             }
         }
 
-        /* ====== МОБИЛЬНЫЙ UI — ПРЕМИУМ ====== */
-        .mob-more-btn {
-            display: none;
-            align-items: center;
-            gap: 4px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-            background: rgba(124,106,240,0.15);
-            border: 1px solid rgba(124,106,240,0.4);
-            color: #7c6af0;
-            transition: all 0.2s;
-            user-select: none;
-        }
-        .mob-more-btn:hover { background: rgba(124,106,240,0.25); }
+        /* ====== МОБИЛЬНЫЙ UI — PREMIUM v2 ====== */
 
+        /* Элементы только для мобилки — скрыты по умолчанию */
+        .mob-hamburger, .mob-refresh-btn { display: none; }
+
+        /* Десктоп: скрываем mob-only */
         @media (min-width: 769px) {
-            .mob-more-btn { display: none !important; }
+            .mob-hamburger, .mob-refresh-btn,
+            .mob-bottom-nav, .mob-more-btn { display: none !important; }
         }
 
+        /* === БОКОВОЕ МЕНЮ (DRAWER) === */
+        .mob-drawer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 299;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .mob-drawer-overlay.open { opacity: 1; }
+
+        .mob-drawer {
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            width: 78vw;
+            max-width: 300px;
+            background: var(--bg2);
+            z-index: 300;
+            transform: translateX(-100%);
+            transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 4px 0 32px rgba(0,0,0,0.5);
+        }
+        .mob-drawer.open { transform: translateX(0); }
+
+        .mob-drawer-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 20px 14px;
+            border-bottom: 1px solid var(--bg4);
+        }
+        .mob-drawer-logo {
+            font-size: 17px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .mob-drawer-close {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: var(--bg3);
+            border: none;
+            color: var(--text2);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mob-drawer-items { padding: 8px 0; flex: 1; }
+
+        .mob-drawer-section {
+            padding: 10px 20px 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text3);
+            text-transform: uppercase;
+        }
+        .mob-drawer-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 20px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text2);
+            cursor: pointer;
+            transition: background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mob-drawer-item:active { background: var(--bg3); }
+        .mob-drawer-item.active {
+            color: var(--accent2);
+            background: rgba(108,92,231,0.12);
+        }
+        .mob-drawer-icon { font-size: 19px; width: 26px; text-align: center; }
+
+        /* === НИЖНЯЯ НАВИГАЦИЯ === */
+        .mob-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 200;
+            background: var(--bg2);
+            border-top: 1px solid var(--bg4);
+            padding: 6px 0 env(safe-area-inset-bottom, 6px);
+        }
+        .mob-nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 4px 2px;
+            cursor: pointer;
+            min-height: 50px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mob-nav-icon {
+            font-size: 21px;
+            width: 42px; height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .mob-nav-item.active .mob-nav-icon {
+            background: rgba(108,92,231,0.25);
+        }
+        .mob-nav-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text3);
+            letter-spacing: -0.2px;
+        }
+        .mob-nav-item.active .mob-nav-label { color: var(--accent2); font-weight: 700; }
+
+        /* === МОБИЛЬНЫЙ МЕДИА-ЗАПРОС === */
         @media (max-width: 768px) {
-            /* Скрываем графики */
+            /* Показываем мобильные элементы */
+            .mob-hamburger { display: flex !important; }
+            .mob-refresh-btn { display: flex !important; }
+            .mob-bottom-nav { display: flex !important; }
+            .mob-drawer-overlay { display: block !important; }
+
+            /* Скрываем десктопные табы и графики */
+            .nav-tabs { display: none !important; }
             .mob-chart-section { display: none !important; }
 
-            /* Скрываем второстепенные табы */
-            .nav-tab-secondary { display: none; }
-            .nav-tab-secondary.mob-visible { display: inline-flex; }
-            .mob-more-btn { display: inline-flex !important; }
-
-            /* HEADER — компактный */
+            /* HEADER — одна строка */
             .header {
-                padding: 10px 16px;
-                gap: 8px;
+                padding: 10px 14px;
+                gap: 0;
             }
             .header h1 {
-                font-size: 16px;
+                font-size: 15px;
                 white-space: nowrap;
-            }
-            .header-controls {
-                gap: 6px;
+                flex: 1;
+                text-align: center;
             }
             .header-controls span { display: none; }
+            .header-controls .btn-primary { display: none !important; }
             .header-controls input[type="date"] {
                 font-size: 12px;
-                padding: 6px 8px;
-                width: 130px;
+                padding: 5px 7px;
+                width: 118px;
             }
-            .header-controls .btn-primary {
-                font-size: 12px;
-                padding: 6px 12px;
+            .mob-hamburger {
+                background: none;
+                border: none;
+                color: var(--text);
+                font-size: 22px;
+                padding: 4px 10px 4px 0;
+                cursor: pointer;
+                align-items: center;
+                flex-shrink: 0;
             }
-
-            /* TABS — горизонтальный скролл, фиксированный снизу */
-            .nav-tabs {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                top: auto !important;
-                z-index: 200;
-                display: flex;
-                overflow-x: auto;
-                background: var(--bg2);
-                border-top: 1px solid var(--bg4);
-                border-bottom: none;
-                padding: 6px 8px;
-                gap: 4px;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-            .nav-tabs::-webkit-scrollbar { display: none; }
-
-            .nav-tab {
-                flex: 0 0 auto;
-                font-size: 11px;
-                padding: 8px 12px;
-                border-radius: 20px;
-                white-space: nowrap;
-                border: 1px solid transparent;
-            }
-            .nav-tab.active {
-                background: var(--accent);
-                color: #fff;
-                border-color: var(--accent);
-            }
-            .mob-more-btn {
-                flex: 0 0 auto;
-                font-size: 11px;
-                padding: 8px 12px;
-                border-radius: 20px;
+            .mob-refresh-btn {
+                background: none;
+                border: none;
+                color: var(--text2);
+                font-size: 18px;
+                padding: 4px 0 4px 8px;
+                cursor: pointer;
+                align-items: center;
+                flex-shrink: 0;
             }
 
-            /* Контент — отступ снизу под навигацию */
-            .main {
-                padding: 12px 12px 80px 12px;
-            }
+            /* Контент — отступ под нижнюю nav */
+            .main { padding: 12px 12px 72px 12px; }
 
-            /* KPI карточки — 2 в ряд */
+            /* KPI 2 в ряд */
             .grid-5, .grid-4 {
                 grid-template-columns: 1fr 1fr !important;
                 gap: 10px;
             }
-            .grid-3, .grid-2 {
-                grid-template-columns: 1fr !important;
-            }
+            .grid-3, .grid-2 { grid-template-columns: 1fr !important; }
 
             /* Карточки */
-            .card {
-                padding: 14px;
-                border-radius: 14px;
-            }
-            .kpi-value {
-                font-size: 22px !important;
-            }
+            .card { padding: 13px; border-radius: 14px; }
+            .kpi-value { font-size: 24px !important; }
             .card-title {
-                font-size: 11px;
-                margin-bottom: 8px;
-            }
-
-            /* Таблицы — горизонтальный скролл */
-            .table-wrap, table {
-                overflow-x: auto;
-                display: block;
-                font-size: 12px;
-            }
-            th, td {
-                padding: 8px 10px !important;
+                font-size: 10px;
+                margin-bottom: 6px;
                 white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
+            .kpi-sub { font-size: 11px; }
 
-            /* Кнопки — крупнее для тач */
-            .btn {
-                font-size: 13px;
-                padding: 10px 16px;
-                min-height: 40px;
-            }
+            /* Таблицы */
+            .table-wrap, table { overflow-x: auto; display: block; font-size: 12px; }
+            th, td { padding: 8px 10px !important; white-space: nowrap; }
 
-            /* AI блок */
-            .glass-panel {
-                padding: 12px !important;
-                border-radius: 12px !important;
-            }
+            /* Кнопки */
+            .btn { font-size: 13px; padding: 10px 14px; min-height: 44px; }
+
+            /* AI панель */
+            .glass-panel { padding: 12px !important; border-radius: 12px !important; }
         }
     </style>
 </head>
@@ -689,13 +763,82 @@
 
     <!-- HEADER -->
     <div class="header">
+        <button class="mob-hamburger" id="mobHamburger" onclick="mobOpenDrawer()">☰</button>
         <h1>WENDRINK ERP</h1>
         <div class="header-controls">
             <span style="font-size:12px;color:var(--text3);">Дата:</span>
             <input type="date" id="globalDate">
             <button class="btn btn-primary" onclick="globalRefresh()">Обновить</button>
+            <button class="mob-refresh-btn" onclick="globalRefresh()">🔄</button>
         </div>
     </div>
+
+    <!-- MOB DRAWER OVERLAY -->
+    <div class="mob-drawer-overlay" id="mobDrawerOverlay" onclick="mobCloseDrawer()"></div>
+
+    <!-- MOB SIDE DRAWER -->
+    <div class="mob-drawer" id="mobDrawer">
+        <div class="mob-drawer-head">
+            <span class="mob-drawer-logo">WENDRINK ERP</span>
+            <button class="mob-drawer-close" onclick="mobCloseDrawer()">✕</button>
+        </div>
+        <div class="mob-drawer-items">
+            <div class="mob-drawer-section">Аналитика</div>
+            <div class="mob-drawer-item" data-tab="analytics" onclick="mobGoTab('analytics')">
+                <span class="mob-drawer-icon">📊</span> Аналитика
+            </div>
+            <div class="mob-drawer-item" data-tab="cogs-variance" onclick="mobGoTab('cogs-variance')">
+                <span class="mob-drawer-icon">🔍</span> Проверка COGS
+            </div>
+            <div class="mob-drawer-item" data-tab="reports" onclick="mobGoTab('reports')">
+                <span class="mob-drawer-icon">📄</span> Отчёты
+            </div>
+            <div class="mob-drawer-section">Данные</div>
+            <div class="mob-drawer-item" data-tab="sales" onclick="mobGoTab('sales')">
+                <span class="mob-drawer-icon">💰</span> Продажи
+            </div>
+            <div class="mob-drawer-item" data-tab="products" onclick="mobGoTab('products')">
+                <span class="mob-drawer-icon">🍹</span> Продукты
+            </div>
+            <div class="mob-drawer-item" data-tab="recipes" onclick="mobGoTab('recipes')">
+                <span class="mob-drawer-icon">📖</span> Рецепты
+            </div>
+            <div class="mob-drawer-item" data-tab="prices" onclick="mobGoTab('prices')">
+                <span class="mob-drawer-icon">💵</span> Цены сырья
+            </div>
+            <div class="mob-drawer-section">Финансы</div>
+            <div class="mob-drawer-item" data-tab="ledger" onclick="mobGoTab('ledger')">
+                <span class="mob-drawer-icon">📒</span> Ledger
+            </div>
+            <div class="mob-drawer-item" data-tab="audit" onclick="mobGoTab('audit')">
+                <span class="mob-drawer-icon">🔎</span> Аудит
+            </div>
+        </div>
+    </div>
+
+    <!-- MOB BOTTOM NAV -->
+    <nav class="mob-bottom-nav" id="mobBottomNav">
+        <div class="mob-nav-item active" data-tab="dashboard" onclick="mobNavClick(this,'dashboard')">
+            <div class="mob-nav-icon">🏠</div>
+            <div class="mob-nav-label">Главная</div>
+        </div>
+        <div class="mob-nav-item" data-tab="daily-input" onclick="mobNavClick(this,'daily-input')">
+            <div class="mob-nav-icon">📝</div>
+            <div class="mob-nav-label">Ввод</div>
+        </div>
+        <div class="mob-nav-item" data-tab="warehouse" onclick="mobNavClick(this,'warehouse')">
+            <div class="mob-nav-icon">📦</div>
+            <div class="mob-nav-label">Склад</div>
+        </div>
+        <div class="mob-nav-item" data-tab="purchase-order" onclick="mobNavClick(this,'purchase-order')">
+            <div class="mob-nav-icon">🛒</div>
+            <div class="mob-nav-label">Заявка</div>
+        </div>
+        <div class="mob-nav-item" data-tab="stocktake" onclick="mobNavClick(this,'stocktake')">
+            <div class="mob-nav-icon">📋</div>
+            <div class="mob-nav-label">Инвент.</div>
+        </div>
+    </nav>
 
     <!-- TABS -->
     <div class="nav-tabs" id="navTabs">
@@ -754,7 +897,7 @@
                     <div class="kpi-sub" id="kCogsSub"></div>
                 </div>
                 <div class="card accent-accent2">
-                    <div class="card-title">Валовая прибыль</div>
+                    <div class="card-title">Брутто</div>
                     <div class="kpi-value" id="kGross">—</div>
                     <div class="kpi-sub">
                         <span id="kGrossSub"></span>
@@ -762,12 +905,12 @@
                     </div>
                 </div>
                 <div class="card accent-pink">
-                    <div class="card-title">OPEX (Расходы)</div>
+                    <div class="card-title">OPEX</div>
                     <div class="kpi-value" id="kOpex">—</div>
                     <div class="kpi-sub" id="kOpexSub"></div>
                 </div>
                 <div class="card accent-green">
-                    <div class="card-title">Чистая прибыль</div>
+                    <div class="card-title">Нетто</div>
                     <div class="kpi-value" id="kProfit">—</div>
                     <div class="kpi-sub">
                         <span id="kProfitSub"></span>
@@ -1841,6 +1984,35 @@
         }
 
         function globalRefresh() { switchTab(S.tab); }
+
+        /* ====== MOB DRAWER ====== */
+        function mobOpenDrawer() {
+            document.getElementById('mobDrawer').classList.add('open');
+            document.getElementById('mobDrawerOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            // подсветить активный пункт
+            document.querySelectorAll('.mob-drawer-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.tab === S.tab);
+            });
+        }
+        function mobCloseDrawer() {
+            document.getElementById('mobDrawer').classList.remove('open');
+            document.getElementById('mobDrawerOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        function mobGoTab(tab) {
+            mobCloseDrawer();
+            switchTab(tab);
+            // снимаем активность с bottom nav
+            document.querySelectorAll('.mob-nav-item').forEach(el => el.classList.remove('active'));
+        }
+
+        /* ====== MOB BOTTOM NAV ====== */
+        function mobNavClick(el, tab) {
+            document.querySelectorAll('.mob-nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            switchTab(tab);
+        }
 
         /* ============================== PLOTLY DARK LAYOUT ============================== */
         const PL = {
