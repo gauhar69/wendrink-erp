@@ -235,6 +235,7 @@ class PLService:
             cogs=cogs,
             gross_profit=gross_profit,
             gross_margin_percent=gross_margin,
+            waste_amount=waste_amount,
             opex_total=opex.total,
             opex_breakdown=opex.breakdown,
             net_profit=net_profit,

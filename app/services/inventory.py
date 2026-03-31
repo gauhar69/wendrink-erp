@@ -67,7 +67,7 @@ class InventoryService:
         result = await self.session.execute(
             select(InventoryLedger.weighted_average_cost)
             .where(InventoryLedger.ingredient_id == ingredient_id)
-            .order_by(InventoryLedger.created_at.desc())
+            .order_by(InventoryLedger.business_date.desc(), InventoryLedger.created_at.desc())
             .limit(1)
         )
         wac = result.scalar()
@@ -136,7 +136,7 @@ class InventoryService:
                     InventoryLedger.ingredient_id == ingredient.id,
                     InventoryLedger.business_date <= target_date,
                 )
-                .order_by(InventoryLedger.created_at.desc())
+                .order_by(InventoryLedger.business_date.desc(), InventoryLedger.created_at.desc())
                 .limit(1)
             )
             wac = wac_result.scalar()
@@ -640,7 +640,8 @@ class InventoryService:
         total_calculated = total_calculated.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         total_expected_q = total_expected.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         
-        if total_calculated != total_expected_q:
+        # Allow ±1₸ tolerance for rounding differences in supplier invoices
+        if abs(total_calculated - total_expected_q) > Decimal("1.00"):
             difference = abs(total_calculated - total_expected_q)
             raise ValueError(
                 f"Сумма позиций ({total_calculated}) не совпадает с ожидаемым итогом "

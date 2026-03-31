@@ -138,9 +138,6 @@ class SaleService:
                 
                 # Track negative stock warnings
                 if ledger_entry.negative_stock:
-                    ingredient_result = await self.session.execute(
-                        select(Product).where(Product.id == recipe.ingredient_id)
-                    )
                     # Get ingredient name for warning (graceful handling)
                     from app.models.ingredient import Ingredient
                     ing_result = await self.session.execute(

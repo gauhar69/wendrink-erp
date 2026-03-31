@@ -67,7 +67,7 @@ class StocktakeService:
             wac_query = (
                 select(InventoryLedger.weighted_average_cost)
                 .where(InventoryLedger.ingredient_id == ingredient.id)
-                .order_by(InventoryLedger.created_at.desc())
+                .order_by(InventoryLedger.business_date.desc(), InventoryLedger.created_at.desc())
                 .limit(1)
             )
             wac_result = await self.session.execute(wac_query)
@@ -101,6 +101,7 @@ class StocktakeService:
         ingredient_id: uuid.UUID,
         actual_quantity: Decimal,
         notes: Optional[str] = None,
+        _check_status: bool = True,
     ) -> StocktakeItem:
         """Обновить реальный остаток для ингредиента."""
         query = (
@@ -112,21 +113,22 @@ class StocktakeService:
         )
         result = await self.session.execute(query)
         item = result.scalar_one_or_none()
-        
+
         if item is None:
             raise ValueError(f"Item not found for ingredient {ingredient_id}")
-        
-        # Проверить статус инвентаризации
-        stocktake = await self.get_stocktake(stocktake_id)
-        if stocktake.status != StocktakeStatus.DRAFT.value:
-            raise ValueError("Cannot update completed stocktake")
-        
+
+        # Проверить статус инвентаризации (пропускается если уже проверено снаружи)
+        if _check_status:
+            stocktake = await self.get_stocktake(stocktake_id)
+            if stocktake.status != StocktakeStatus.DRAFT.value:
+                raise ValueError("Cannot update completed stocktake")
+
         item.actual_quantity = actual_quantity
         item.variance_quantity = actual_quantity - item.expected_quantity
         item.variance_value = item.variance_quantity * item.unit_cost
         if notes:
             item.notes = notes
-        
+
         await self.session.flush()
         return item
     
@@ -151,12 +153,14 @@ class StocktakeService:
             ingredient_id = uuid.UUID(item_data["ingredient_id"])
             actual_qty = Decimal(str(item_data["actual_quantity"]))
             notes = item_data.get("notes")
-            
+
+            # _check_status=False: статус уже проверен выше, избегаем N+1 запросов
             await self.update_item(
                 stocktake_id=stocktake_id,
                 ingredient_id=ingredient_id,
                 actual_quantity=actual_qty,
                 notes=notes,
+                _check_status=False,
             )
         
         return await self.get_stocktake(stocktake_id)
