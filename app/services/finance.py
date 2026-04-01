@@ -226,7 +226,7 @@ class FinanceService:
                     .where(FinanceLedger.category == category)
                     .where(FinanceLedger.business_date == business_date)
                 )
-                if existing.scalar_one_or_none() is not None:
+                if existing.scalars().first() is not None:
                     continue
             
             entry = FinanceLedger(
@@ -556,9 +556,9 @@ class FinanceService:
                 .where(FinanceLedger.category == category_code)
                 .where(FinanceLedger.description.like("Daily Fixed Cost:%"))
             )
-            if existing.scalar_one_or_none():
+            if existing.scalars().first():
                 continue
-                
+
             entry = FinanceLedger(
                 category=category_code,
                 amount=daily_amount,
