@@ -3972,8 +3972,8 @@
                     data.map(s => `<tr>
                 <td>${s.business_date}</td>
                 <td><span class="badge ${s.status.toLowerCase() === 'completed' ? 'badge-ok' : 'badge-warn'}">${s.status}</span></td>
-                <td class="r">${s.total_expected != null ? fmtD(s.total_expected) : '—'}</td>
-                <td class="r">${s.total_actual != null ? fmtD(s.total_actual) : '—'}</td>
+                <td class="r">${s.total_expected_value != null ? fmtD(s.total_expected_value) : '—'}</td>
+                <td class="r">${s.total_actual_value != null ? fmtD(s.total_actual_value) : '—'}</td>
                 <td class="r">${s.total_variance_value != null ? fmtM(s.total_variance_value) : '—'}</td>
                 <td style="display:flex;gap:6px;">
                     <button class="btn btn-ghost btn-sm" onclick="stOpen('${s.id}')">Открыть</button>
