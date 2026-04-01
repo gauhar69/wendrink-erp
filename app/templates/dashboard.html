@@ -4012,18 +4012,22 @@
                 const det = $('stDetail');
                 det.style.display = 'block';
 
+                const isCompleted = (d.status || '').toLowerCase() === 'completed';
                 let html = `<div class="card"><div class="card-title">Инвентаризация ${d.business_date} [${d.status}]</div>`;
                 html += '<div class="table-wrap" style="max-height:60vh;overflow-y:auto;"><table><thead><tr><th>Ингредиент</th><th class="r">Ожидалось</th><th class="r">Факт</th><th class="r">Разница</th><th class="r">Стоимость</th></tr></thead><tbody>';
 
                 (d.items || []).forEach(i => {
                     const cls = parseFloat(i.variance_quantity || 0) < 0 ? 'row-crit' : '';
+                    const inputAttrs = isCompleted
+                        ? `disabled style="width:80px;font-size:12px;opacity:0.6;cursor:not-allowed;"`
+                        : `style="width:80px;font-size:12px;" data-ingredient-id="${i.ingredient_id}" data-st-id="${id}"`;
                     html += `<tr class="${cls}"><td>${i.ingredient_name || '?'}</td><td class="r">${fmtD(i.expected_quantity)}</td>
-            <td class="r"><input type="number" value="${i.actual_quantity || 0}" style="width:80px;font-size:12px;" data-ingredient-id="${i.ingredient_id}" data-st-id="${id}"></td>
+            <td class="r"><input type="number" value="${i.actual_quantity || 0}" ${inputAttrs}></td>
             <td class="r">${fmtD(i.variance_quantity || 0)}</td><td class="r">${fmtM(i.variance_value || 0)}</td></tr>`;
                 });
 
                 html += '</tbody></table></div>';
-                if (d.status.toLowerCase() !== 'completed') {
+                if (!isCompleted) {
                     html += `<div style="margin-top:12px;display:flex;gap:8px;">
                 <button class="btn btn-primary" onclick="stSave('${id}')">Сохранить</button>
                 <button class="btn btn-success" onclick="stComplete('${id}')">Завершить</button>
