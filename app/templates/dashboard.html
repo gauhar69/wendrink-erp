@@ -4012,31 +4012,22 @@
                 const det = $('stDetail');
                 det.style.display = 'block';
 
-                const isCompleted = (d.status || '').toLowerCase() === 'completed';
                 let html = `<div class="card"><div class="card-title">Инвентаризация ${d.business_date} [${d.status}]</div>`;
                 html += '<div class="table-wrap" style="max-height:60vh;overflow-y:auto;"><table><thead><tr><th>Ингредиент</th><th class="r">Ожидалось</th><th class="r">Факт</th><th class="r">Разница</th><th class="r">Стоимость</th></tr></thead><tbody>';
 
                 (d.items || []).forEach(i => {
                     const cls = parseFloat(i.variance_quantity || 0) < 0 ? 'row-crit' : '';
-                    const inputAttrs = isCompleted
-                        ? `disabled style="width:80px;font-size:12px;opacity:0.6;cursor:not-allowed;"`
-                        : `style="width:80px;font-size:12px;" data-ingredient-id="${i.ingredient_id}" data-st-id="${id}"`;
                     html += `<tr class="${cls}"><td>${i.ingredient_name || '?'}</td><td class="r">${fmtD(i.expected_quantity)}</td>
-            <td class="r"><input type="number" value="${i.actual_quantity || 0}" ${inputAttrs}></td>
+            <td class="r"><input type="number" value="${i.actual_quantity || 0}" style="width:80px;font-size:12px;" data-ingredient-id="${i.ingredient_id}" data-st-id="${id}"></td>
             <td class="r">${fmtD(i.variance_quantity || 0)}</td><td class="r">${fmtM(i.variance_value || 0)}</td></tr>`;
                 });
 
                 html += '</tbody></table></div>';
-                if (!isCompleted) {
-                    html += `<div style="margin-top:12px;display:flex;gap:8px;">
+                html += `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn btn-primary" onclick="stSave('${id}')">Сохранить</button>
                 <button class="btn btn-success" onclick="stComplete('${id}')">Завершить</button>
+                <button onclick="stReapply('${id}')" style="padding:7px 16px;background:rgba(255,165,0,0.15);border:1px solid rgba(255,165,0,0.5);color:#ffaa00;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">🔄 Применить к остаткам</button>
             </div>`;
-                } else {
-                    html += `<div style="margin-top:12px;padding:8px 12px;background:rgba(46,160,67,0.15);border:1px solid rgba(46,160,67,0.4);border-radius:6px;color:#3fb950;font-size:13px;">
-                ✅ Инвентаризация завершена и применена к остаткам
-            </div>`;
-                }
                 html += '</div>';
                 det.innerHTML = html;
             } catch (e) { console.error('Stocktake open:', e); }
@@ -4065,6 +4056,21 @@
                 const r = await fetch(`${API}/stocktake/${id}/complete`, { method: 'POST' });
                 if (r.ok) { toast('Завершено'); stOpen(id); loadStocktakes(); }
                 else { const e = await r.json(); toast(e.detail || 'Ошибка', false); }
+            } catch (e) { toast('Ошибка: ' + e.message, false); }
+        }
+
+        async function stReapply(id) {
+            if (!confirm('Повторно применить корректировки к остаткам склада?\n\nЭто нужно если "Удалить день" удалил данные инвентаризации.')) return;
+            try {
+                const r = await fetch(`${API}/stocktake/${id}/reapply`, { method: 'POST' });
+                if (r.ok) {
+                    toast('✅ Корректировки применены к остаткам склада');
+                    stOpen(id);
+                    loadStocktakes();
+                } else {
+                    const e = await r.json();
+                    toast('❌ ' + (e.detail || 'Ошибка'), false);
+                }
             } catch (e) { toast('Ошибка: ' + e.message, false); }
         }
 
