@@ -222,9 +222,19 @@ class InventoryService:
         
         self.session.add(entry)
         await self.session.flush()
-        
+
+        # Автоматически обновляем current_price ингредиента
+        # чтобы Заявка и Цены сырья всегда показывали последнюю цену поставки
+        from app.models.ingredient import Ingredient
+        ing_result = await self.session.execute(
+            select(Ingredient).where(Ingredient.id == ingredient_id)
+        )
+        ingredient = ing_result.scalar_one_or_none()
+        if ingredient:
+            ingredient.current_price = unit_cost
+
         return entry
-    
+
     def _calculate_new_wac(
         self,
         old_stock: Decimal,
@@ -695,7 +705,10 @@ class InventoryService:
             
             self.session.add(entry)
             await self.session.flush()
-            
+
+            # Автоматически обновляем current_price ингредиента
+            ingredient.current_price = unit_cost
+
             processed_items.append({
                 "ingredient_id": str(ingredient.id),
                 "ingredient_name": ingredient.name,
