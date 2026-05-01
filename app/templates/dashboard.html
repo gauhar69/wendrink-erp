@@ -4023,10 +4023,11 @@
                 });
 
                 html += '</tbody></table></div>';
+                const isDraft = d.status.toLowerCase() === 'draft';
                 html += `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-primary" onclick="stSave('${id}')">Сохранить</button>
-                <button class="btn btn-success" onclick="stComplete('${id}')">Завершить</button>
-                <button onclick="stReapply('${id}')" style="padding:7px 16px;background:rgba(255,165,0,0.15);border:1px solid rgba(255,165,0,0.5);color:#ffaa00;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">🔄 Применить к остаткам</button>
+                ${isDraft ? `<button class="btn btn-primary" onclick="stSave('${id}')">Сохранить</button>` : ''}
+                ${isDraft ? `<button class="btn btn-success" onclick="stComplete('${id}')">Завершить</button>` : ''}
+                ${!isDraft ? `<span style="color:var(--green);font-size:13px;font-weight:700;">✅ Инвентаризация завершена</span>` : ''}
             </div>`;
                 html += '</div>';
                 det.innerHTML = html;
@@ -4578,65 +4579,102 @@
         }
 
         function poExportPDF() {
-            if (!poState.items || poState.items.length === 0) {
-                toast('Заявка пуста! Сначала сформируйте или добавьте позиции.', false);
-                return;
+            try {
+                if (!poState.items || poState.items.length === 0) {
+                    toast('Заявка пуста! Сначала нажмите "Сформировать заявку".', false);
+                    return;
+                }
+
+                const dateStr = new Date().toLocaleDateString('ru-RU');
+                let rows = '';
+                poState.items.forEach((item, idx) => {
+                    rows += '<tr>' +
+                        '<td class="c">' + (idx + 1) + '</td>' +
+                        '<td>' + item.name + '</td>' +
+                        '<td class="r">' + item.current_stock + '</td>' +
+                        '<td class="r">' + item.norm_stock + '</td>' +
+                        '<td class="r" style="font-weight:bold;color:#c00;">' + item.quantity + '</td>' +
+                        '<td class="r">' + item.price.toLocaleString('ru-RU') + '</td>' +
+                        '<td class="r">' + item.sum.toLocaleString('ru-RU') + '</td>' +
+                        '</tr>';
+                });
+                const total = poState.items.reduce((acc, curr) => acc + curr.sum, 0);
+
+                // Удаляем старый оверлей если есть
+                const old = document.getElementById('poPrintOverlay');
+                if (old) old.remove();
+                const oldStyle = document.getElementById('poPrintStyle');
+                if (oldStyle) oldStyle.remove();
+
+                // Определяем мобильное устройство
+                const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+                const overlay = document.createElement('div');
+                overlay.id = 'poPrintOverlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box;';
+
+                const closeFn = "var o=document.getElementById('poPrintOverlay');if(o)o.remove();var s=document.getElementById('poPrintStyle');if(s)s.remove();";
+
+                let toolbarHTML = '';
+                if (isMobile) {
+                    // На мобильном — одна кнопка "Печать/PDF" + закрыть
+                    toolbarHTML = '<div style="background:#f5f5f5;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #ddd;">' +
+                        '<button onclick="window.print()" style="flex:1;background:#c00;color:#fff;border:none;padding:14px 16px;font-size:16px;border-radius:8px;cursor:pointer;font-weight:700;min-width:160px;">🖨 Печатать / PDF</button>' +
+                        '<button onclick="' + closeFn + '" style="background:#888;color:#fff;border:none;padding:14px 18px;font-size:16px;border-radius:8px;cursor:pointer;font-weight:700;">✕</button>' +
+                        '</div>' +
+                        '<div style="background:#fff3cd;color:#856404;padding:10px 14px;font-size:13px;border-bottom:1px solid #ffc107;">' +
+                        '💡 Нажмите <strong>Печатать / PDF</strong> → в диалоге выберите <strong>Сохранить как PDF</strong>' +
+                        '</div>';
+                } else {
+                    // На десктопе — все кнопки
+                    toolbarHTML = '<div style="background:#f5f5f5;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #ddd;">' +
+                        '<button onclick="window.print()" style="background:#c00;color:#fff;border:none;padding:12px 20px;font-size:14px;border-radius:8px;cursor:pointer;font-weight:700;">🖨 Печать / PDF</button>' +
+                        '<button onclick="' + closeFn + '" style="background:#888;color:#fff;border:none;padding:12px 16px;font-size:14px;border-radius:8px;cursor:pointer;font-weight:700;">✕ Закрыть</button>' +
+                        '</div>';
+                }
+
+                overlay.innerHTML = toolbarHTML +
+                    '<div id="poPrintContent">' +
+                    '<h2>ЗАЯВКА НА ЗАКУПКУ</h2>' +
+                    '<p><strong>Дата формирования:</strong> ' + dateStr + '</p>' +
+                    '<table><thead><tr>' +
+                    '<th class="c" style="width:36px;">№</th><th>Наименование</th>' +
+                    '<th class="r">Остаток</th><th class="r">НЗ</th>' +
+                    '<th class="r" style="color:#c00;">Купить</th><th class="r">Цена</th><th class="r">Сумма ₸</th>' +
+                    '</tr></thead><tbody>' + rows + '</tbody>' +
+                    '<tfoot><tr class="total-row"><td colspan="6" class="r">ИТОГО К ЗАКУПКЕ:</td>' +
+                    '<td class="r">' + total.toLocaleString('ru-RU') + ' ₸</td></tr></tfoot>' +
+                    '</table>' +
+                    '<div style="margin-top:40px;display:flex;justify-content:space-between;gap:20px;">' +
+                    '<div><div style="border-bottom:1px solid #333;width:180px;margin-bottom:4px;"></div><div style="font-size:11px;color:#666;">Подпись сотрудника</div></div>' +
+                    '<div><div style="border-bottom:1px solid #333;width:150px;margin-bottom:4px;"></div><div style="font-size:11px;color:#666;">Дата получения</div></div>' +
+                    '</div></div>';
+
+                const style = document.createElement('style');
+                style.id = 'poPrintStyle';
+                style.textContent =
+                    '#poPrintContent{padding:16px;max-width:900px;margin:0 auto;font-family:Arial,sans-serif;color:#111;}' +
+                    '#poPrintContent h2{font-size:20px;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:16px;}' +
+                    '#poPrintContent table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px;}' +
+                    '#poPrintContent th,#poPrintContent td{border:1px solid #ccc;padding:7px 9px;}' +
+                    '#poPrintContent th{background:#f0f0f0;font-weight:700;}' +
+                    '#poPrintContent .r{text-align:right;}#poPrintContent .c{text-align:center;}' +
+                    '#poPrintContent .total-row td{font-weight:700;background:#e8e8e8;}' +
+                    '@media print{' +
+                    'body>*:not(#poPrintOverlay){display:none!important;}' +
+                    '#poPrintOverlay{position:static!important;overflow:visible!important;}' +
+                    '#poPrintOverlay>div:first-child{display:none!important;}' +
+                    '#poPrintOverlay>div:nth-child(2){display:none!important;}' +
+                    '@page{size:A4 portrait;margin:1cm;}' +
+                    '}';
+
+                document.head.appendChild(style);
+                document.body.appendChild(overlay);
+
+            } catch(err) {
+                toast('Ошибка PDF: ' + err.message, false);
+                console.error('poExportPDF error:', err);
             }
-
-            const dateStr = new Date().toLocaleDateString('ru-RU');
-
-            let printWin = window.open('', '', 'width=900,height=700');
-            printWin.document.write('<html><head><title>Заявка на закупку ' + dateStr + '</title>');
-            printWin.document.write('<style>');
-            printWin.document.write('body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #111; }');
-            printWin.document.write('h2 { font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }');
-            printWin.document.write('table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }');
-            printWin.document.write('th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }');
-            printWin.document.write('th { background-color: #f0f0f0; font-weight: bold; }');
-            printWin.document.write('.r { text-align: right; }');
-            printWin.document.write('.c { text-align: center; }');
-            printWin.document.write('.total-row td { font-weight: bold; background-color: #e8e8e8; font-size: 14px; }');
-            printWin.document.write('@media print { body { padding: 0; } @page { size: A4 portrait; margin: 1cm; } }');
-            printWin.document.write('</style></head><body>');
-
-            printWin.document.write('<h2>ЗАЯВКА НА ЗАКУПКУ </h2>');
-            printWin.document.write('<p><strong>Дата формирования:</strong> ' + dateStr + '</p>');
-            printWin.document.write('<table>');
-            printWin.document.write('<thead><tr><th class="c" style="width: 40px;">№</th><th>Наименование ингредиента</th><th class="r">Остаток</th><th class="r">НЗ</th><th class="r" style="color: #d32f2f;">Нужно купить</th><th class="r">Цена за ед.</th><th class="r">Сумма (₸)</th></tr></thead>');
-            printWin.document.write('<tbody>');
-
-            poState.items.forEach((item, idx) => {
-                printWin.document.write('<tr>');
-                printWin.document.write('<td class="c">' + (idx + 1) + '</td>');
-                printWin.document.write('<td>' + item.name + '</td>');
-                printWin.document.write('<td class="r">' + item.current_stock + '</td>');
-                printWin.document.write('<td class="r">' + item.norm_stock + '</td>');
-                printWin.document.write('<td class="r" style="font-weight: bold;">' + item.quantity + '</td>');
-                printWin.document.write('<td class="r">' + item.price.toLocaleString('ru-RU') + '</td>');
-                printWin.document.write('<td class="r">' + item.sum.toLocaleString('ru-RU') + '</td>');
-                printWin.document.write('</tr>');
-            });
-
-            const total = poState.items.reduce((acc, curr) => acc + curr.sum, 0);
-
-            printWin.document.write('</tbody>');
-            printWin.document.write('<tfoot><tr class="total-row"><td colspan="6" class="r">ИТОГО К ЗАКУПКЕ:</td><td class="r">' + total.toLocaleString('ru-RU') + ' ₸</td></tr></tfoot>');
-            printWin.document.write('</table>');
-
-            printWin.document.write('<div style="margin-top: 50px; display: flex; justify-content: space-between;">');
-            printWin.document.write('<div><div>_______________________________</div><div style="font-size: 12px; color: #666; margin-top: 5px;">Подпись сотрудника</div></div>');
-            printWin.document.write('<div><div>_______________________________</div><div style="font-size: 12px; color: #666; margin-top: 5px;">Дата получения</div></div>');
-            printWin.document.write('</div>');
-
-            printWin.document.write('</body></html>');
-
-            printWin.document.close();
-
-            // Ждем рендера окна перед командой печати
-            setTimeout(() => {
-                printWin.focus();
-                printWin.print();
-            }, 500);
         }
 
         /* ============================== ПРОВЕРКА COGS ============================== */
