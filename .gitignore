@@ -61,6 +61,24 @@ wendrink.db-journal
 # OS
 .DS_Store
 Thumbs.db
+.~lock.*#
+
+# Temp docs
+IdealSon_*.docx
 
 # Логи
 *.log
+
+# Confidential documents (passport, transfer of rights)
+WENDRINK_Паспорт*.docx
+WENDRINK_Передача_прав.docx
+
+# Backups
+*.db.before-*
+*.db.backup
+*.db.bak
+backups/
+
+# Editor
+~$*.docx
+.~lock.*
