@@ -9,7 +9,7 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update as sql_update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -172,48 +172,70 @@ class StocktakeService:
     ) -> Stocktake:
         """
         Завершить инвентаризацию и применить коррекции.
-        
+
+        PATCH-010: Использует атомарный UPDATE как защиту от двойного
+        применения. Если другой запрос уже перевёл stocktake в COMPLETED
+        (например пользователь нажал кнопку дважды), rowcount будет 0 и
+        ValueError остановит выполнение ДО создания ADJUSTMENT events.
+        Если в этом методе позже выбрасывается любое исключение —
+        транзакция откатится в endpoint, и UPDATE отменится.
+
         Args:
             stocktake_id: ID инвентаризации
             apply_adjustments: Создать ADJUSTMENT события в ledger
         """
-        stocktake = await self.get_stocktake(stocktake_id)
-        if stocktake is None:
-            raise ValueError(f"Stocktake {stocktake_id} not found")
-        
-        if stocktake.status != StocktakeStatus.DRAFT.value:
+        # Атомарно перевести status DRAFT -> COMPLETED.
+        # Только один параллельный/повторный запрос получит rowcount=1,
+        # остальные получат 0 и упадут с ValueError ниже.
+        completed_at = datetime.now(timezone.utc)
+        result = await self.session.execute(
+            sql_update(Stocktake)
+            .where(Stocktake.id == stocktake_id)
+            .where(Stocktake.status == StocktakeStatus.DRAFT.value)
+            .values(
+                status=StocktakeStatus.COMPLETED.value,
+                completed_at=completed_at,
+            )
+        )
+        if result.rowcount == 0:
+            # Различаем "не найдено" от "уже завершено" для понятной ошибки
+            stocktake_check = await self.get_stocktake(stocktake_id)
+            if stocktake_check is None:
+                raise ValueError(f"Stocktake {stocktake_id} not found")
             raise ValueError("Stocktake already completed")
-        
+
+        # После успешного UPDATE — загружаем объект с items для подсчёта totals
+        stocktake = await self.get_stocktake(stocktake_id)
+
         # Проверить что все позиции заполнены
         for item in stocktake.items:
             if item.actual_quantity is None:
                 raise ValueError(
                     f"Actual quantity not set for {item.ingredient.name}"
                 )
-        
+
         # Подсчитать итоги
         total_expected = Decimal("0")
         total_actual = Decimal("0")
         total_variance = Decimal("0")
-        
+
         for item in stocktake.items:
             expected_value = item.expected_quantity * item.unit_cost
             actual_value = item.actual_quantity * item.unit_cost
-            
+
             total_expected += expected_value
             total_actual += actual_value
             total_variance += item.variance_value or Decimal("0")
-        
+
         stocktake.total_expected_value = total_expected
         stocktake.total_actual_value = total_actual
         stocktake.total_variance_value = total_variance
-        stocktake.status = StocktakeStatus.COMPLETED.value
-        stocktake.completed_at = datetime.now(timezone.utc)
-        
+        # status и completed_at уже выставлены атомарным UPDATE выше — не трогаем
+
         # Применить коррекции
         if apply_adjustments:
             await self._apply_adjustments(stocktake)
-        
+
         await self.session.flush()
         return stocktake
     
