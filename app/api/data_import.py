@@ -682,11 +682,15 @@ async def verify_day_data(
     from sqlalchemy import func
 
     # 1. Get Actual Ledger Deduction (COGS)
+    # NOTE: cost_snapshot already stores the full movement value
+    # (abs(change_amount) * WAC at event time). Summing it directly
+    # gives the actual COGS. The previous formula multiplied by
+    # abs(change_amount) again, producing a quadratic value.
     ledger_stats = await session.execute(
         select(
             InventoryLedger.ingredient_id,
             func.sum(InventoryLedger.change_amount).label("actual_qty"),
-            func.sum(InventoryLedger.cost_snapshot * func.abs(InventoryLedger.change_amount)).label("actual_cogs")
+            func.sum(InventoryLedger.cost_snapshot).label("actual_cogs")
         )
         .where(InventoryLedger.business_date == business_date)
         .where(InventoryLedger.event_type == 'SALE')
