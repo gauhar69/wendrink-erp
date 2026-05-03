@@ -8,6 +8,7 @@ from app.models.recipe import Recipe
 from app.models.sale import Sale
 from app.models.sale_item import SaleItem
 from app.models.stocktake import Stocktake, StocktakeItem
+from app.models.user import User
 
 __all__ = [
     "Base",
@@ -20,5 +21,6 @@ __all__ = [
     "SaleItem",
     "Stocktake",
     "StocktakeItem",
+    "User",
 ]
 
