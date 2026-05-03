@@ -22,3 +22,7 @@ python-multipart>=0.0.7
 # Visualization (for charts)
 matplotlib>=3.8.0
 plotly>=5.18.0
+
+# Authentication
+passlib[bcrypt]>=1.7.4
+pyjwt>=2.8.0
