@@ -1,24 +1,32 @@
 """add adjustments_applied_at to stocktakes for /reapply idempotency
 
 Revision ID: reapply_idem
-Revises: 005
+Revises: 005, 20260228_price_precision
 Create Date: 2026-05-03
 
 PATCH 2.2: предотвращает повторное применение коррекций инвентаризации
 при многократных вызовах endpoint POST /api/stocktake/{id}/reapply.
 
+ALSO acts as a merge revision: до этой миграции в alembic-дереве было
+две головы (005 и 20260228_price_precision), которые мирно
+сосуществовали потому что Dockerfile проглатывал ошибку
+RUN ... 2>/dev/null. Эта ревизия объединяет обе ветки в одну голову
+через tuple down_revision, чтобы upgrade head стал детерминированным.
+
 Backfill: всем уже завершённым stocktake выставляет
 adjustments_applied_at = completed_at, потому что коррекции для
 них уже применены (это происходит в complete_stocktake).
 """
-from typing import Sequence, Union
+from typing import Sequence, Tuple, Union
 
 from alembic import op
 import sqlalchemy as sa
 
 
 revision: str = 'reapply_idem'
-down_revision: Union[str, None] = '005'
+# Merge revision: pull in both 005 and 20260228_price_precision so the
+# alembic graph has a single head after this point.
+down_revision: Union[str, Tuple[str, ...], None] = ('005', '20260228_price_precision')
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
