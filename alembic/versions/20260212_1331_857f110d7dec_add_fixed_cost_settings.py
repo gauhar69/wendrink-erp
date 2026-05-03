@@ -13,7 +13,11 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '857f110d7dec'
-down_revision: Union[str, None] = '005'
+# FIX 2026-05-03: было ошибочно '005' (создавало цикл 005↔857f110d7dec),
+# хотя в docstring правильно написано "Revises: 004". 857f110d7dec создана
+# 2026-02-12, а 005 — 2026-02-27, так что 857f110d7dec идёт ПОСЛЕ 004 и
+# ДО 005, не наоборот.
+down_revision: Union[str, None] = '004'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
