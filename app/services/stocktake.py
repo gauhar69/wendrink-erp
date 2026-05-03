@@ -240,7 +240,13 @@ class StocktakeService:
         return stocktake
     
     async def _apply_adjustments(self, stocktake: Stocktake):
-        """Создать ADJUSTMENT события для коррекции остатков."""
+        """Создать ADJUSTMENT события для коррекции остатков.
+
+        PATCH 2.2: после применения проставляет adjustments_applied_at —
+        этот timestamp используется endpoint'ом /reapply как защита
+        от повторного применения. Перезаписывает значение даже если
+        уже было выставлено (для случая force=true в /reapply).
+        """
         for item in stocktake.items:
             if item.variance_quantity and item.variance_quantity != 0:
                 # Создаем ADJUSTMENT событие
@@ -258,6 +264,9 @@ class StocktakeService:
                     ),
                 )
                 self.session.add(ledger_entry)
+
+        # Проставить timestamp применения — используется /reapply для idempotency
+        stocktake.adjustments_applied_at = datetime.now(timezone.utc)
     
     async def get_report(self, stocktake_id: uuid.UUID) -> dict:
         """Получить отчёт по инвентаризации."""
