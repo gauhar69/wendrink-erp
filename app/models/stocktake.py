@@ -80,7 +80,14 @@ class Stocktake(Base):
     completed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    
+
+    # PATCH 2.2: idempotency marker для /reapply.
+    # Ставится в _apply_adjustments при первом успешном применении.
+    # Если не None — повторный /reapply откажет с 409, кроме force=true.
+    adjustments_applied_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     # Связь с позициями
     items: Mapped[list["StocktakeItem"]] = relationship(
         "StocktakeItem",

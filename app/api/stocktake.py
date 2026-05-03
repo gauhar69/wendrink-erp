@@ -351,10 +351,19 @@ async def delete_stocktake(
 
     Используется когда "Удалить день" удалил ADJUSTMENT события.
     Заново создаёт корректировки остатков из данных инвентаризации.
+
+    **PATCH 2.2 — idempotency:**
+    Если коррекции уже были применены (adjustments_applied_at != null),
+    endpoint возвращает 409 Conflict, чтобы случайные повторные клики
+    не создавали ADJUSTMENT-записи поверх существующих.
+
+    Чтобы всё-таки применить заново (например, после "Удалить день")
+    — передать `?force=true` в URL. В этом случае timestamp обновится.
     """,
 )
 async def reapply_stocktake(
     stocktake_id: str,
+    force: bool = Query(False, description="Применить даже если уже было применено ранее"),
     db: AsyncSession = Depends(get_db),
 ) -> StocktakeReportResponse:
     """Re-apply adjustments from a completed stocktake."""
@@ -368,6 +377,16 @@ async def reapply_stocktake(
     stocktake = await service.get_stocktake(stocktake_uuid)
     if stocktake is None:
         raise HTTPException(status_code=404, detail="Stocktake not found")
+
+    # PATCH 2.2: idempotency — если коррекции уже применялись и force не задан, отказ
+    if stocktake.adjustments_applied_at is not None and not force:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Adjustments already applied at {stocktake.adjustments_applied_at.isoformat()}. "
+                "Use ?force=true to apply again (e.g. after 'Delete day')."
+            ),
+        )
 
     try:
         await service._apply_adjustments(stocktake)
