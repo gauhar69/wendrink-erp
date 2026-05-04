@@ -10,7 +10,6 @@ from typing import AsyncIterator
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -98,7 +97,9 @@ Ledger-first financial system for Kazakh coffee shop chain.
     @app.get("/login", response_class=HTMLResponse, tags=["UI"])
     async def login_page(request: Request):
         """Render the login page."""
-        return templates.TemplateResponse("login.html", {"request": request, "error": None})
+        html_path = Path("app/templates/login.html")
+        with open(html_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
 
     @app.get("/dashboard", response_class=HTMLResponse, tags=["UI"])
     async def dashboard_ui():
