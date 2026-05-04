@@ -6,6 +6,7 @@ Aggregates all API routes.
 
 from fastapi import APIRouter
 
+from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.api.ingredients import router as ingredients_router
 from app.api.inventory import router as inventory_router
@@ -22,6 +23,9 @@ from app.api.verification import router as verification_router
 
 # Main API router
 api_router = APIRouter()
+
+# Auth routes (must be first, and open — no auth required)
+api_router.include_router(auth_router)
 
 # Include sub-routers
 api_router.include_router(health_router, tags=["Health"])

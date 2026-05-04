@@ -7,9 +7,10 @@ Main application factory and configuration.
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -91,7 +92,14 @@ Ledger-first financial system for Kazakh coffee shop chain.
 
     # Include API routes
     app.include_router(api_router)
-    
+
+    templates = Jinja2Templates(directory="app/templates")
+
+    @app.get("/login", response_class=HTMLResponse, tags=["UI"])
+    async def login_page(request: Request):
+        """Render the login page."""
+        return templates.TemplateResponse("login.html", {"request": request, "error": None})
+
     @app.get("/dashboard", response_class=HTMLResponse, tags=["UI"])
     async def dashboard_ui():
         """Direct access to dashboard UI."""
@@ -99,7 +107,6 @@ Ledger-first financial system for Kazakh coffee shop chain.
         with open(html_path, "r", encoding="utf-8") as f:
             html_content = f.read()
         return HTMLResponse(content=html_content)
-
 
     @app.get("/", tags=["UI"])
     async def root():
