@@ -18,7 +18,12 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     
     database_url: str = "sqlite+aiosqlite:///./wendrink.db"
-    
+
+    # Authentication
+    jwt_secret_key: str = "change-me-in-production-use-secrets-token-urlsafe-64"
+    jwt_algorithm: str = "HS256"
+    jwt_lifetime_hours: int = 24
+
     @property
     def async_database_url(self) -> str:
         return self.database_url
