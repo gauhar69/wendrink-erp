@@ -5,15 +5,16 @@ Main application factory and configuration.
 """
 
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from pathlib import Path
+from typing import AsyncIterator, Optional
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
+from app.auth.jwt_tokens import decode_access_token
 from app.config import get_settings
 from app.database import close_db, init_db
 
@@ -22,7 +23,7 @@ from app.database import close_db, init_db
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
     Application lifespan manager.
-    
+
     Handles startup and shutdown events:
     - Startup: Initialize database connection
     - Shutdown: Close database connections
@@ -33,9 +34,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         print("[OK] Database connection established")
     except Exception as e:
         print(f"[ERROR] Database connection failed: {e}")
-    
+
     yield
-    
+
     # Shutdown
     await close_db()
     print("[OK] Database connections closed")
@@ -44,11 +45,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 def create_app() -> FastAPI:
     """
     Application factory.
-    
+
     Creates and configures the FastAPI application.
     """
     settings = get_settings()
-    
+
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
@@ -73,7 +74,7 @@ Ledger-first financial system for Kazakh coffee shop chain.
         openapi_url="/openapi.json",
         lifespan=lifespan,
     )
-    
+
     # CORS middleware for development
     if settings.app_env == "development":
         app.add_middleware(
@@ -83,7 +84,7 @@ Ledger-first financial system for Kazakh coffee shop chain.
             allow_methods=["*"],
             allow_headers=["*"],
         )
-    
+
     # Static files (PWA icons, manifest)
     static_path = Path("app/static")
     static_path.mkdir(exist_ok=True)
@@ -92,30 +93,32 @@ Ledger-first financial system for Kazakh coffee shop chain.
     # Include API routes
     app.include_router(api_router)
 
-    templates = Jinja2Templates(directory="app/templates")
+    # ─── UI Routes ───────────────────────────────────────────────────────────
+
+    @app.get("/", response_class=RedirectResponse, tags=["UI"])
+    async def root():
+        """Redirect root to dashboard."""
+        return RedirectResponse(url="/dashboard", status_code=302)
 
     @app.get("/login", response_class=HTMLResponse, tags=["UI"])
     async def login_page(request: Request):
-        """Render the login page."""
+        """Render the login page. Redirect to dashboard if already logged in."""
+        token: Optional[str] = request.cookies.get("access_token")
+        if token and decode_access_token(token):
+            return RedirectResponse(url="/dashboard", status_code=302)
         html_path = Path("app/templates/login.html")
-        with open(html_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
+        return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
 
     @app.get("/dashboard", response_class=HTMLResponse, tags=["UI"])
-    async def dashboard_ui():
-        """Direct access to dashboard UI."""
+    async def dashboard_ui(request: Request):
+        """Serve dashboard. Requires valid auth cookie — redirects to /login otherwise."""
+        token: Optional[str] = request.cookies.get("access_token")
+        if not token or not decode_access_token(token):
+            return RedirectResponse(url="/login", status_code=302)
         html_path = Path("app/templates/dashboard.html")
-        with open(html_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
-        return HTMLResponse(content=html_content)
-
-    @app.get("/", tags=["UI"])
-    async def root():
-        """Redirect to dashboard."""
-        return RedirectResponse(url="/dashboard")
+        return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
 
     return app
 
 
-# Create application instance
 app = create_app()
