@@ -2443,20 +2443,20 @@
                 try {
                     if (forecastR.ok) {
                         const fc = await forecastR.json();
-                        const items = Array.isArray(fc) ? fc : (fc.forecast || fc.items || fc.data || []);
+                        const items = fc.forecasts || (Array.isArray(fc) ? fc : []);
                         const critical = items
-                            .filter(i => parseFloat(i.days_remaining ?? i.days_until_stockout ?? 999) < 4)
-                            .sort((a,b) => (a.days_remaining??999) - (b.days_remaining??999));
+                            .filter(i => parseFloat(i.days_left ?? 999) < 4)
+                            .sort((a,b) => (a.days_left??999) - (b.days_left??999));
                         if (critical.length > 0) {
                             const it = critical[0];
-                            const days = parseFloat(it.days_remaining ?? it.days_until_stockout);
+                            const days = parseFloat(it.days_left ?? 0);
                             const targetDate = new Date(dDate);
                             targetDate.setDate(targetDate.getDate() + Math.ceil(days));
                             const wd = weekdays_ru[targetDate.getDay()];
-                            const name = it.ingredient_name || it.name || 'ингредиент';
-                            const bal = fmtD(it.current_balance || it.balance || 0);
+                            const name = it.ingredient || it.ingredient_name || 'ингредиент';
+                            const bal = fmtD(parseFloat(it.current_stock || 0));
                             const unit = it.unit || '';
-                            const avg = fmtD(it.daily_avg_usage || it.avg_daily_usage || 0);
+                            const avg = fmtD(parseFloat(it.daily_usage_avg || 0));
                             insights.push({ priority: 4, dot: '🔴', text: `К ${wd} закончится <b>${name}</b> (${bal} ${unit} · расход ${avg} ${unit}/день)` });
                         }
                     }
@@ -2539,8 +2539,8 @@
                 if (balR.ok && fcR.ok) {
                     const bal = await balR.json();
                     const fc = await fcR.json();
-                    const fcItems = Array.isArray(fc) ? fc : (fc.forecast || fc.items || fc.data || []);
-                    const critFc = fcItems.filter(i => parseFloat(i.days_remaining ?? i.days_until_stockout ?? 999) < 5);
+                    const fcItems = fc.forecasts || (Array.isArray(fc) ? fc : []);
+                    const critFc = fcItems.filter(i => parseFloat(i.days_left ?? 999) < 5);
                     const lowBal = bal.filter(b => {
                         const norm = parseFloat(b.norm_stock || b.min_stock || 0);
                         return norm > 0 && parseFloat(b.balance || 0) < norm * 0.3;
@@ -2866,24 +2866,22 @@
                 ]);
                 if (!balR.ok || !fcR.ok) { container.innerHTML = '<div style="color:var(--text3);">Нет данных</div>'; return; }
 
-                const balances = await balR.json();
                 const fc = await fcR.json();
-                const fcItems = Array.isArray(fc) ? fc : (fc.forecast || fc.items || fc.data || []);
+                const fcItems = fc.forecasts || (Array.isArray(fc) ? fc : []);
 
+                // Берём остатки из balance для min_stock
+                const balances = balR.ok ? await balR.json() : [];
                 const balMap = {};
-                balances.forEach(b => balMap[b.ingredient_id] = b);
+                balances.forEach(b => { balMap[b.ingredient_id] = b; });
 
-                const joined = fcItems.map(item => {
-                    const b = balMap[item.ingredient_id] || {};
-                    return {
-                        name: item.ingredient_name || b.ingredient_name || 'Ингредиент',
-                        unit: item.unit || b.unit || '',
-                        balance: parseFloat(b.balance || item.current_balance || 0),
-                        min_stock: parseFloat(b.min_stock || b.norm_stock || 0),
-                        days: parseFloat(item.days_remaining ?? item.days_until_stockout ?? 999),
-                        daily_avg: parseFloat(item.daily_avg_usage || item.avg_daily_usage || 0),
-                    };
-                }).filter(i => i.days < 14).sort((a,b) => a.days - b.days).slice(0, 8);
+                const joined = fcItems.map(item => ({
+                    name: item.ingredient || item.ingredient_name || 'Ингредиент',
+                    unit: item.unit || '',
+                    balance: parseFloat(item.current_stock || 0),
+                    min_stock: parseFloat((balMap[item.ingredient_id] || {}).min_stock || (balMap[item.ingredient_id] || {}).norm_stock || 0),
+                    days: parseFloat(item.days_left ?? 999),
+                    daily_avg: parseFloat(item.daily_usage_avg || 0),
+                })).filter(i => i.days < 14).sort((a,b) => a.days - b.days).slice(0, 8);
 
                 if (joined.length === 0) {
                     container.innerHTML = '<div style="color:var(--green);font-size:13px;padding:12px 0;">✅ Все запасы в норме — хватит более чем на 14 дней</div>';
