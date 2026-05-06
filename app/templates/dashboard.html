@@ -2706,7 +2706,7 @@
 
                 // Строим ячейки сетки
                 let headerCells = weekdays_short.map(wd =>
-                    `<div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding:3px 2px;">${wd}</div>`
+                    `<div style="width:38px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding:4px 0 6px;">${wd}</div>`
                 ).join('');
 
                 let dayCells = '';
@@ -2722,7 +2722,7 @@
                     const border = isToday ? '2px solid var(--accent2)' : '1px solid rgba(255,255,255,0.05)';
                     const textColor = op > 0.5 ? '#fff' : 'var(--text3)';
                     const title = rev > 0 ? `${ds}: ${fmtM(rev)}` : ds;
-                    dayCells += `<div title="${title}" style="aspect-ratio:1;border-radius:6px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:${isToday?'800':'500'};color:${textColor};cursor:default;transition:transform 0.12s;" onmouseover="this.style.transform='scale(1.18)'" onmouseout="this.style.transform='scale(1)'">${dayNum}</div>`;
+                    dayCells += `<div title="${title}" style="width:38px;height:38px;border-radius:7px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:${isToday?'800':'500'};color:${textColor};cursor:default;transition:transform 0.12s;box-sizing:border-box;" onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform='scale(1)'">${dayNum}</div>`;
                 }
 
                 // Сводка по дням недели (правая колонка)
@@ -2748,13 +2748,13 @@
                         <div style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;">${fmt(totalRev)} ₸${mcStr}</div>
                         <div style="font-size:12px;color:var(--text3);margin-top:3px;">${months_ru[month]} ${year} · ${daysWithData} ${dWord} с продажами</div>
                     </div>
-                    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
-                        <div style="flex:1;min-width:240px;">
-                            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">
+                    <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+                        <div style="flex-shrink:0;">
+                            <div style="display:grid;grid-template-columns:repeat(7,38px);gap:3px;width:fit-content;">
                                 ${headerCells}${dayCells}
                             </div>
                         </div>
-                        <div style="width:190px;flex-shrink:0;">
+                        <div style="flex:1;min-width:160px;">
                             <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">По дням недели</div>
                             ${dowSummary}
                             <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--bg3);">
