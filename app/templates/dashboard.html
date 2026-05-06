@@ -337,6 +337,37 @@
             background: var(--green);
         }
 
+        /* KPI 2.0 — цветные акценты по бизнес-смыслу */
+        .card.kpi-revenue::before { background: #1D9E75; }
+        .card.kpi-cogs::before    { background: #BA7517; }
+        .card.kpi-gross::before   { background: #1D9E75; }
+        .card.kpi-opex::before    { background: #888780; }
+        .card.kpi-net::before     { background: #534AB7; }
+
+        /* Sparkline */
+        .kpi-sparkline {
+            height: 22px;
+            margin: 10px 0 6px;
+            opacity: 0.75;
+            line-height: 0;
+        }
+        .kpi-sparkline svg { display: block; }
+
+        /* Trend badge */
+        .kpi-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 6px;
+            letter-spacing: 0.02em;
+        }
+        .kpi-trend.up   { color: #1D9E75; background: rgba(29,158,117,0.13); }
+        .kpi-trend.down { color: #E24B4A; background: rgba(226,75,74,0.13); }
+        .kpi-trend.flat { color: #888780; background: rgba(136,135,128,0.13); }
+
         .card-title {
             font-size: 11px;
             font-weight: 700;
@@ -958,38 +989,45 @@
             </div>
 
             <div class="grid grid-5">
-                <div class="card accent-blue">
+                <div class="card kpi-revenue">
                     <div class="card-title">Выручка</div>
                     <div class="kpi-value" id="kRevenue">—</div>
+                    <div class="kpi-sparkline" id="kRevenueSparkline"></div>
                     <div class="kpi-sub">
                         <span id="kRevenueSub"></span>
+                        <span id="kRevenueTrend" class="kpi-trend" style="display:none"></span>
                         <div style="display:none;" id="kOrders"></div>
                         <div style="display:none;" id="kAvgCheck"></div>
                     </div>
                 </div>
-                <div class="card accent-orange">
+                <div class="card kpi-cogs">
                     <div class="card-title">COGS (Сырье)</div>
                     <div class="kpi-value" id="kCogs">—</div>
+                    <div class="kpi-sparkline" id="kCogsSparkline"></div>
                     <div class="kpi-sub" id="kCogsSub"></div>
                 </div>
-                <div class="card accent-accent2">
+                <div class="card kpi-gross">
                     <div class="card-title">Валовая прибыль</div>
                     <div class="kpi-value" id="kGross">—</div>
+                    <div class="kpi-sparkline" id="kGrossSparkline"></div>
                     <div class="kpi-sub">
                         <span id="kGrossSub"></span>
                         <span>Маржа: <b id="kGrossMargin">—</b></span>
                     </div>
                 </div>
-                <div class="card accent-pink">
+                <div class="card kpi-opex">
                     <div class="card-title">OPEX (Расходы)</div>
                     <div class="kpi-value" id="kOpex">—</div>
+                    <div class="kpi-sparkline" id="kOpexSparkline"></div>
                     <div class="kpi-sub" id="kOpexSub"></div>
                 </div>
-                <div class="card accent-green">
+                <div class="card kpi-net">
                     <div class="card-title">Чистая прибыль</div>
                     <div class="kpi-value" id="kProfit">—</div>
+                    <div class="kpi-sparkline" id="kNetSparkline"></div>
                     <div class="kpi-sub">
                         <span id="kProfitSub"></span>
+                        <span id="kNetTrend" class="kpi-trend" style="display:none"></span>
                         <div style="display:none;" id="kNetMargin"></div>
                     </div>
                 </div>
@@ -2057,6 +2095,56 @@
             return fmtD(v);
         };
 
+        /* ── Sparkline (inline SVG, no deps) ── */
+        function sparkline(values, width = 100, height = 22, color = '#7c6af0') {
+            if (!values || values.length < 2) return '';
+            const nums = values.map(v => parseFloat(v) || 0);
+            const min = Math.min(...nums), max = Math.max(...nums);
+            const range = max - min || 1;
+            const dx = width / (nums.length - 1);
+            const pts = nums.map((v, i) => {
+                const x = (i * dx).toFixed(1);
+                const y = (height - ((v - min) / range) * (height - 4) - 2).toFixed(1);
+                return `${x},${y}`;
+            }).join(' ');
+            return `<svg width="100%" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><polyline fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" points="${pts}"/></svg>`;
+        }
+
+        /* ── Склонение «чек / чека / чеков» ── */
+        function pluralizeCheks(n) {
+            const m100 = n % 100;
+            if (m100 >= 11 && m100 <= 19) return 'чеков';
+            const m10 = n % 10;
+            if (m10 === 1) return 'чек';
+            if (m10 >= 2 && m10 <= 4) return 'чека';
+            return 'чеков';
+        }
+
+        /* ── Дата N дней назад в формате YYYY-MM-DD ── */
+        function daysAgo(base, n) {
+            const d = new Date(base);
+            d.setDate(d.getDate() - n);
+            return d.toISOString().split('T')[0];
+        }
+
+        /* ── Trend badge ── */
+        function setTrend(elId, currentVal, sameWeekdayAvg) {
+            const el = $(elId);
+            if (!el || !sameWeekdayAvg) return;
+            const pct = (currentVal - sameWeekdayAvg) / sameWeekdayAvg * 100;
+            el.style.display = 'inline-flex';
+            if (pct >= 5) {
+                el.className = 'kpi-trend up';
+                el.textContent = '▲ ' + pct.toFixed(0) + '%';
+            } else if (pct <= -5) {
+                el.className = 'kpi-trend down';
+                el.textContent = '▼ ' + Math.abs(pct).toFixed(0) + '%';
+            } else {
+                el.className = 'kpi-trend flat';
+                el.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(0) + '%';
+            }
+        }
+
         function toast(msg, ok = true) {
             const d = document.createElement('div');
             d.className = 'toast ' + (ok ? 'toast-ok' : 'toast-err');
@@ -2169,6 +2257,7 @@
         /* ============================== DASHBOARD KPI ============================== */
         async function loadKPI() {
             try {
+                // Загружаем P&L за выбранный день
                 const r = await fetch(`${API}/reports/daily-pnl/${S.date}`);
                 if (!r.ok) return;
                 const d = await r.json();
@@ -2180,8 +2269,9 @@
                 const net = parseFloat(d.net_profit || 0);
                 const txn = d.transaction_count || 0;
 
+                // Основные значения (без изменений)
                 $('kRevenue').textContent = fmtM(rev);
-                $('kRevenueSub').textContent = txn + ' чеков';
+                $('kRevenueSub').textContent = txn + ' ' + pluralizeCheks(txn);
                 $('kCogs').textContent = fmtM(cogs);
                 $('kCogsSub').textContent = rev > 0 ? ((cogs / rev * 100).toFixed(1) + '% от выручки') : '';
                 $('kOrders').textContent = txn;
@@ -2204,6 +2294,40 @@
                 $('kGrossMargin').textContent = (d.gross_margin_percent || '0') + '%';
                 $('kNetMargin').textContent = (d.net_margin_percent || '0') + '%';
                 $('kNetMargin').style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+
+                // ── Sparklines + Trend (28 дней тренда) ──────────────────────
+                try {
+                    const tR = await fetch(`${API}/charts/sales-trend?start_date=${daysAgo(S.date, 27)}&end_date=${S.date}`);
+                    if (tR.ok) {
+                        const trend = await tR.json();
+                        const pts = Array.isArray(trend) ? trend : (trend.data || []);
+
+                        // Последние 7 точек — для sparkline
+                        const last7 = pts.slice(-7);
+                        $('kRevenueSparkline').innerHTML = sparkline(last7.map(p => p.revenue || 0), 100, 22, '#1D9E75');
+                        $('kCogsSparkline').innerHTML    = sparkline(last7.map(p => p.cogs || 0), 100, 22, '#BA7517');
+                        $('kGrossSparkline').innerHTML   = sparkline(last7.map(p => (p.gross_profit !== undefined ? p.gross_profit : ((p.revenue || 0) - (p.cogs || 0)))), 100, 22, '#1D9E75');
+                        $('kNetSparkline').innerHTML     = sparkline(last7.map(p => p.profit !== undefined ? p.profit : (p.net_profit || 0)), 100, 22, '#534AB7');
+                        // OPEX: считаем из revenue - cogs - profit как приближение
+                        $('kOpexSparkline').innerHTML    = sparkline(last7.map(p => {
+                            const g = p.gross_profit !== undefined ? p.gross_profit : ((p.revenue || 0) - (p.cogs || 0));
+                            const n = p.profit !== undefined ? p.profit : (p.net_profit || 0);
+                            return Math.max(0, g - n);
+                        }), 100, 22, '#888780');
+
+                        // Trend vs тот же день недели за прошлые 4 недели
+                        const todayDOW = new Date(S.date).getDay();
+                        const sameDay = pts.filter(p => p.date !== S.date && new Date(p.date).getDay() === todayDOW);
+                        if (sameDay.length >= 2) {
+                            const avgRev = sameDay.reduce((s, p) => s + (p.revenue || 0), 0) / sameDay.length;
+                            const avgNet = sameDay.reduce((s, p) => s + (p.profit !== undefined ? p.profit : (p.net_profit || 0)), 0) / sameDay.length;
+                            setTrend('kRevenueTrend', rev, avgRev);
+                            setTrend('kNetTrend', net, avgNet);
+                        }
+                    }
+                } catch(e) { console.warn('KPI sparkline:', e); }
+                // ─────────────────────────────────────────────────────────────
+
             } catch (e) { console.error('KPI:', e); }
         }
 
