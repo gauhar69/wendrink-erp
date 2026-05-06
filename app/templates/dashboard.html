@@ -754,21 +754,43 @@
                 background: none;
                 border: none;
                 color: var(--text);
-                font-size: 22px;
-                padding: 4px 10px 4px 0;
+                font-size: 24px;
+                padding: 8px 10px 8px 0;
                 cursor: pointer;
                 align-items: center;
                 flex-shrink: 0;
+                -webkit-tap-highlight-color: transparent;
             }
             .mob-refresh-btn {
                 background: none;
                 border: none;
                 color: var(--text2);
                 font-size: 18px;
-                padding: 4px 0 4px 8px;
+                padding: 8px 0 8px 8px;
                 cursor: pointer;
                 align-items: center;
                 flex-shrink: 0;
+                -webkit-tap-highlight-color: transparent;
+            }
+            /* Заголовок WENDRINK на мобиле — градиент */
+            .header h1 {
+                background: linear-gradient(135deg, var(--accent2), var(--text));
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            /* Дата — компактная капсула */
+            .header-controls input[type="date"] {
+                background: var(--bg3) !important;
+                border-radius: 8px !important;
+                border-color: var(--bg4) !important;
+            }
+            /* AI-панель на мобиле */
+            .glass-panel {
+                padding: 14px !important;
+                border-radius: 14px !important;
+                backdrop-filter: blur(8px) !important;
+                -webkit-backdrop-filter: blur(8px) !important;
             }
 
             /* Контент — отступ под нижнюю nav */
@@ -786,22 +808,30 @@
             .grid-3, .grid-2 { grid-template-columns: 1fr !important; }
 
             /* Карточки */
-            .card { padding: 12px 13px; border-radius: 14px; }
+            .card { padding: 14px 13px; border-radius: 16px; }
             .kpi-value {
-                font-size: 20px !important;
+                font-size: 22px !important;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                letter-spacing: -0.3px;
+                letter-spacing: 0;
             }
             .card-title {
-                font-size: 9.5px;
-                margin-bottom: 5px;
-                white-space: normal;
+                font-size: 10px;
+                margin-bottom: 6px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 line-height: 1.3;
-                letter-spacing: 0.06em;
+                letter-spacing: 0.07em;
             }
             .kpi-sub { font-size: 11px; }
+            /* KPI цветная полоска на мобиле */
+            .card.kpi-revenue::before { background: #1D9E75; }
+            .card.kpi-cogs::before    { background: #BA7517; }
+            .card.kpi-gross::before   { background: #1D9E75; }
+            .card.kpi-opex::before    { background: #888780; }
+            .card.kpi-net::before     { background: #534AB7; }
 
             /* Таблицы */
             .table-wrap, table { overflow-x: auto; display: block; font-size: 12px; }
@@ -1033,28 +1063,47 @@
                 </div>
             </div>
 
-            <div class="grid grid-2 mob-chart-section">
+            <!-- ── Action Items ── -->
+            <div id="actionItemsBlock" style="display:none;margin-bottom:0;"></div>
+
+            <!-- ── Calendar Heatmap ── -->
+            <div class="grid grid-1 mob-chart-section" style="margin-bottom:16px;">
                 <div class="card">
-                    <div class="card-title">Выручка vs Прибыль (7 дней)</div>
-                    <div id="chartTrend" style="height:320px;"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title">ТОП-10 Продуктов</div>
-                    <div id="chartTop" style="height:320px;"></div>
+                    <div class="card-title" style="margin-bottom:14px;">📅 Выручка за месяц</div>
+                    <div id="calHeatmapContainer">
+                        <div style="color:var(--text3);font-size:13px;">Загрузка...</div>
+                    </div>
                 </div>
             </div>
+
+            <!-- ── Pareto 80/20 + Stockout Forecast ── -->
+            <div class="grid grid-2 mob-chart-section" style="margin-bottom:16px;">
+                <div class="card">
+                    <div class="card-title" style="margin-bottom:4px;">📊 Топ продуктов · Правило 80/20</div>
+                    <div id="paretoSubtitle" style="font-size:12px;color:var(--text3);margin-bottom:12px;">Загрузка...</div>
+                    <div id="chartPareto" style="height:300px;"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="margin-bottom:14px;">🚨 Что заказать срочно · прогноз</div>
+                    <div id="stockoutContainer">
+                        <div style="color:var(--text3);font-size:13px;">Загрузка...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Выручка vs Прибыль (7 дней) ── -->
+            <div class="grid grid-1 mob-chart-section" style="margin-bottom:16px;">
+                <div class="card">
+                    <div class="card-title">Выручка vs Прибыль (7 дней)</div>
+                    <div id="chartTrend" style="height:300px;"></div>
+                </div>
+            </div>
+
+            <!-- ── Продажи по категориям ── -->
             <div class="grid grid-1 mob-chart-section">
                 <div class="card">
                     <div class="card-title">Продажи по категориям</div>
-                    <div id="chartCat" style="height:320px;"></div>
-                </div>
-            </div>
-            <!-- График критических остатков убран - можно добавить в отдельную вкладку Склад -->
-
-            <div class="grid grid-1 mob-chart-section">
-                <div class="card">
-                    <div class="card-title">Расход топ-5 ингредиентов (7 дней)</div>
-                    <div id="chartUsage" style="height:300px;"></div>
+                    <div id="chartCat" style="height:300px;"></div>
                 </div>
             </div>
         </div>
@@ -2173,7 +2222,7 @@
             if (sec) sec.classList.add('active');
 
             const loaders = {
-                'dashboard': () => { loadKPI(); loadCharts(); loadInsights(); },
+                'dashboard': () => { loadKPI(); loadInsights(); loadActionItems(); loadCalendarHeatmap(); loadPareto(); loadStockoutForecast(); loadCharts(); },
                 'daily-input': initDI,
                 'warehouse': loadWarehouse,
                 'products': loadProducts,
@@ -2332,88 +2381,554 @@
         }
 
         async function loadInsights() {
-            const container = document.getElementById('aiInsightsContainer');
+            const container = $('aiInsightsContainer');
             if (!container) return;
             container.innerHTML = '<div style="color:var(--text3);font-size:13px;">⏳ Анализирую данные...</div>';
 
             try {
-                let html = [];
+                const insights = [];
                 const dDate = S.date;
+                const weekdays_ru = ['воскресенье','понедельник','вторник','среду','четверг','пятницу','субботу'];
 
-                const [pnlR, invR, ingR] = await Promise.all([
+                // Параллельно грузим нужные данные
+                const [pnlR, cogsVarR, forecastR, productCostsR] = await Promise.all([
                     fetch(`${API}/reports/daily-pnl/${dDate}`),
-                    fetch(`${API}/inventory/balance`),
-                    fetch(`${API}/ingredients?limit=500`)
+                    fetch(`${API}/reports/cogs-variance/${dDate}?threshold=3`),
+                    fetch(`${API}/analytics/inventory-forecast?analysis_days=14&forecast_days=7`),
+                    fetch(`${API}/reports/product-costs`)
                 ]);
+                const pnl = pnlR.ok ? await pnlR.json() : null;
 
-                // 1. Топ-1 продукт — используем готовый endpoint с именами
+                // Правило 1: сравнение с тем же днём недели
                 try {
-                    const topR = await fetch(`${API}/reports/product-sales/top?start_date=${dDate}&end_date=${dDate}&limit=1&sort_by=revenue`);
-                    if (topR.ok) {
-                        const topData = await topR.json();
-                        const products = topData.products || topData || [];
-                        if (products.length > 0) {
-                            const p = products[0];
-                            html.push(`Топ-1 продукт по выручке: <b>${p.product_name}</b> <span style="color:var(--text3);">(${fmtM(p.total_revenue || p.revenue || 0)})</span>`);
+                    const tR = await fetch(`${API}/charts/sales-trend?start_date=${daysAgo(dDate,27)}&end_date=${dDate}`);
+                    if (tR.ok) {
+                        const raw = await tR.json();
+                        const pts = Array.isArray(raw) ? raw : (raw.data || []);
+                        const todayDOW = new Date(dDate).getDay();
+                        const sameDay = pts.filter(p => (p.date||p.business_date) !== dDate && new Date(p.date||p.business_date).getDay() === todayDOW);
+                        if (sameDay.length >= 2 && pnl) {
+                            const avgRev = sameDay.reduce((s,p) => s + parseFloat(p.revenue||0), 0) / sameDay.length;
+                            const rev = parseFloat(pnl.revenue || pnl.total_revenue || 0);
+                            if (avgRev > 0 && rev > 0) {
+                                const pct = (rev - avgRev) / avgRev * 100;
+                                if (Math.abs(pct) >= 10) {
+                                    const sign = pct > 0 ? '+' : '';
+                                    const dot = pct >= 15 ? '🟢' : '🟡';
+                                    const wd = weekdays_ru[todayDOW];
+                                    insights.push({ priority: pct >= 0 ? 2 : 3, dot, text: `Выручка ${sign}${pct.toFixed(0)}% к среднему ${wd}` });
+                                }
+                            }
                         }
                     }
                 } catch(e) {}
 
-                // 2. Топ ингредиент (из usages)
+                // Правило 2: COGS variance
                 try {
-                    const uR = await fetch(`${API}/charts/ingredient-usage?start_date=${dDate}&end_date=${dDate}&limit=1`);
-                    if (uR.ok) {
-                        const ud = (await uR.json()).data || [];
-                        if (ud.length > 0) {
-                            html.push(`Топ ингредиент по расходу: <b>${ud[0].name}</b>`);
+                    if (cogsVarR.ok) {
+                        const cv = await cogsVarR.json();
+                        const ingVars = cv.ingredient_variances || [];
+                        const worst = ingVars
+                            .filter(i => Math.abs(parseFloat(i.variance_percent)) > 3)
+                            .sort((a,b) => Math.abs(parseFloat(b.variance_percent)) - Math.abs(parseFloat(a.variance_percent)));
+                        if (worst.length > 0) {
+                            const w = worst[0];
+                            const pctTotal = parseFloat(cv.total_variance_percent || cv.variance_percent || Math.abs(parseFloat(w.variance_percent))).toFixed(1);
+                            insights.push({ priority: 3, dot: '🟡', text: `COGS variance ${pctTotal}% — выше порога. Проверь <b>${w.ingredient_name}</b> (${fmtD(Math.abs(w.variance_qty))} ${w.unit} откл.)` });
                         }
                     }
-                } catch (e) { }
+                } catch(e) {}
 
-                // 3. Маржа
-                if (pnlR.ok) {
-                    const pnl = await pnlR.json();
-                    const rev = parseFloat(pnl.total_revenue || pnl.revenue || 0);
-                    const net = parseFloat(pnl.net_profit || 0);
-                    if (rev > 0) {
-                        const mrg = (net / rev) * 100;
-                        const c = mrg > 50 ? 'var(--green)' : mrg < 40 ? 'var(--red)' : 'var(--text)';
-                        html.push(`<span style="color:${c};">Маржа за день: <b>${mrg.toFixed(1)}%</b></span>`);
+                // Правило 3: stockout forecast (критичные — < 4 дней)
+                try {
+                    if (forecastR.ok) {
+                        const fc = await forecastR.json();
+                        const items = Array.isArray(fc) ? fc : (fc.forecast || fc.items || fc.data || []);
+                        const critical = items
+                            .filter(i => parseFloat(i.days_remaining ?? i.days_until_stockout ?? 999) < 4)
+                            .sort((a,b) => (a.days_remaining??999) - (b.days_remaining??999));
+                        if (critical.length > 0) {
+                            const it = critical[0];
+                            const days = parseFloat(it.days_remaining ?? it.days_until_stockout);
+                            const targetDate = new Date(dDate);
+                            targetDate.setDate(targetDate.getDate() + Math.ceil(days));
+                            const wd = weekdays_ru[targetDate.getDay()];
+                            const name = it.ingredient_name || it.name || 'ингредиент';
+                            const bal = fmtD(it.current_balance || it.balance || 0);
+                            const unit = it.unit || '';
+                            const avg = fmtD(it.daily_avg_usage || it.avg_daily_usage || 0);
+                            insights.push({ priority: 4, dot: '🔴', text: `К ${wd} закончится <b>${name}</b> (${bal} ${unit} · расход ${avg} ${unit}/день)` });
+                        }
                     }
-                }
+                } catch(e) {}
 
-                // 4. Заявка на закупку
-                if (invR.ok && ingR.ok) {
-                    const balances = await invR.json();
-                    const ings = await ingR.json();
-                    const normMap = {};
-                    ings.forEach(i => normMap[i.id] = parseFloat(i.norm_stock || 0));
-
-                    let warnings = 0;
-                    balances.forEach(b => {
-                        const bal = parseFloat(b.balance || 0);
-                        const norm = normMap[b.ingredient_id] || 0;
-                        if (norm > 0 && bal < (norm * 0.7)) warnings++; // < 70% of norm (-30%)
-                    });
-
-                    if (warnings > 0) {
-                        html.push(`<span style="color:var(--red);">⚠️ В заявке на закупку: <b>${warnings} позиций</b> требуют заказа!</span>`);
+                // Правило 4: высокомаржинальный продукт (маржа > 70%, топ-15 по выручке)
+                try {
+                    if (productCostsR.ok) {
+                        const pc = await productCostsR.json();
+                        const prods = Array.isArray(pc) ? pc : (pc.products || []);
+                        const topR2 = await fetch(`${API}/reports/product-sales/top?start_date=${daysAgo(dDate,13)}&end_date=${dDate}&limit=15&sort_by=revenue`);
+                        if (topR2.ok) {
+                            const topSales = (await topR2.json()).products || [];
+                            const topIds = new Set(topSales.map(p => p.product_id));
+                            const highMargin = prods
+                                .filter(p => parseFloat(p.margin_percent||0) > 70 && topIds.has(p.product_id||p.id))
+                                .sort((a,b) => parseFloat(b.margin_percent) - parseFloat(a.margin_percent));
+                            if (highMargin.length > 0) {
+                                const p = highMargin[0];
+                                const name = p.product_name || p.name;
+                                const m = parseFloat(p.margin_percent).toFixed(0);
+                                insights.push({ priority: 1, dot: '🟣', text: `«${name}» — лучшая маржа ${m}%. Попроси бариста активнее предлагать` });
+                            }
+                        }
                     }
-                }
+                } catch(e) {}
 
-                if (html.length === 0) {
-                    container.innerHTML = '<div style="color:var(--green);font-size:13px;">Всё в норме!</div>';
+                // Правило 5: зарплата не введена (после 14:00 Алматы)
+                try {
+                    const almatyHour = parseInt(new Date().toLocaleString('en-CA', {timeZone:'Asia/Almaty', hour:'numeric', hour12:false}));
+                    if (almatyHour >= 14) {
+                        const yest = daysAgo(dDate, 1);
+                        const ledR = await fetch(`${API}/inventory/ledger?event_type=SALARY&business_date=${yest}&limit=1`);
+                        if (ledR.ok) {
+                            const led = await ledR.json();
+                            const its = Array.isArray(led) ? led : (led.items || led.data || []);
+                            if (its.length === 0) {
+                                insights.push({ priority: 3, dot: '🟡', text: `Зарплата за вчера не введена. Не забудь внести в «Ввод за день»` });
+                            }
+                        }
+                    }
+                } catch(e) {}
+
+                // Сортируем по приоритету: 4 (🔴) > 3 (🟡) > 2 (🟢) > 1 (🟣)
+                insights.sort((a,b) => b.priority - a.priority);
+
+                if (insights.length === 0) {
+                    container.innerHTML = '<div style="color:var(--green);font-size:13px;">✅ Всё в норме — критических событий нет</div>';
                 } else {
-                    container.innerHTML = html.map(item => `
-                        <div style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;">
-                            <span style="color:var(--accent);">•</span>
-                            <span style="color:var(--text);">${item}</span>
+                    container.innerHTML = insights.map(ins => `
+                        <div style="display:flex;align-items:flex-start;gap:10px;font-size:13.5px;padding:4px 0;line-height:1.5;">
+                            <span style="font-size:14px;flex-shrink:0;margin-top:1px;">${ins.dot}</span>
+                            <span style="color:var(--text);">${ins.text}</span>
                         </div>
                     `).join('');
                 }
-            } catch (e) {
-                console.error(e);
+            } catch(e) {
+                console.error('Insights:', e);
                 container.innerHTML = '<div style="color:var(--red);font-size:13px;">Ошибка генерации сводки</div>';
+            }
+        }
+
+        /* ============================== ACTION ITEMS ============================== */
+        async function loadActionItems() {
+            const block = $('actionItemsBlock');
+            if (!block) return;
+
+            const items = [];
+            const dDate = S.date;
+            const todayKey = `actions-checked-${dDate}`;
+            let checked = {};
+            try { checked = JSON.parse(localStorage.getItem(todayKey) || '{}'); } catch(e) {}
+
+            // 1. Заказать позиции на склад
+            try {
+                const [balR, fcR] = await Promise.all([
+                    fetch(`${API}/inventory/balance`),
+                    fetch(`${API}/analytics/inventory-forecast?analysis_days=14&forecast_days=7`)
+                ]);
+                if (balR.ok && fcR.ok) {
+                    const bal = await balR.json();
+                    const fc = await fcR.json();
+                    const fcItems = Array.isArray(fc) ? fc : (fc.forecast || fc.items || fc.data || []);
+                    const critFc = fcItems.filter(i => parseFloat(i.days_remaining ?? i.days_until_stockout ?? 999) < 5);
+                    const lowBal = bal.filter(b => {
+                        const norm = parseFloat(b.norm_stock || b.min_stock || 0);
+                        return norm > 0 && parseFloat(b.balance || 0) < norm * 0.3;
+                    });
+                    const cnt = Math.max(critFc.length, lowBal.length);
+                    if (cnt > 0) {
+                        const word = cnt === 1 ? 'позицию' : cnt < 5 ? 'позиции' : 'позиций';
+                        items.push({ id:'order', icon:'📦', text:`Заказать ${cnt} ${word} на склад`, tab:'purchase-order' });
+                    }
+                }
+            } catch(e) {}
+
+            // 2. Ввести зарплату (после 14:00 Алматы)
+            try {
+                const almatyHour = parseInt(new Date().toLocaleString('en-CA', {timeZone:'Asia/Almaty', hour:'numeric', hour12:false}));
+                if (almatyHour >= 14) {
+                    const ledR = await fetch(`${API}/inventory/ledger?event_type=SALARY&business_date=${dDate}&limit=1`);
+                    if (ledR.ok) {
+                        const led = await ledR.json();
+                        const its = Array.isArray(led) ? led : (led.items || led.data || []);
+                        if (its.length === 0) items.push({ id:'salary', icon:'💰', text:'Ввести зарплату сотрудникам', tab:'daily-input' });
+                    }
+                }
+            } catch(e) {}
+
+            // 3. Проверить COGS variance > 3%
+            try {
+                const cvR = await fetch(`${API}/reports/cogs-variance/${dDate}?threshold=3`);
+                if (cvR.ok) {
+                    const cv = await cvR.json();
+                    const bad = (cv.ingredient_variances || []).filter(i => Math.abs(parseFloat(i.variance_percent)) > 3);
+                    if (bad.length > 0) {
+                        items.push({ id:'cogs', icon:'🔍', text:`Проверить COGS variance (${bad.length} ингр. превышают 3%)`, tab:'cogs-variance' });
+                    }
+                }
+            } catch(e) {}
+
+            // 4. Z-репорт не введён (после 16:00 Алматы)
+            try {
+                const almatyHour2 = parseInt(new Date().toLocaleString('en-CA', {timeZone:'Asia/Almaty', hour:'numeric', hour12:false}));
+                if (almatyHour2 >= 16) {
+                    const salesR = await fetch(`${API}/sales?business_date=${dDate}`);
+                    if (salesR.ok) {
+                        const sales = await salesR.json();
+                        const salesArr = Array.isArray(sales) ? sales : (sales.items || sales.data || []);
+                        if (salesArr.length === 0) items.push({ id:'zreport', icon:'📝', text:'Ввести данные продаж за день (Z-репорт)', tab:'daily-input' });
+                    }
+                }
+            } catch(e) {}
+
+            if (items.length === 0) { block.style.display = 'none'; return; }
+
+            block.style.display = 'block';
+            block.innerHTML = `
+                <div class="card" style="margin-bottom:16px;">
+                    <div class="card-title" style="margin-bottom:14px;">✅ Что сделать сегодня</div>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        ${items.map(item => `
+                            <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:9px 12px;border-radius:10px;background:var(--bg3);transition:background 0.15s;"
+                                onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background='var(--bg3)'">
+                                <input type="checkbox" id="ac-${item.id}"
+                                    ${checked[item.id] ? 'checked' : ''}
+                                    onchange="actionItemToggle('${item.id}','${dDate}')"
+                                    style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
+                                <span style="font-size:16px;">${item.icon}</span>
+                                <span id="ac-text-${item.id}" style="font-size:13.5px;color:var(--text);${checked[item.id] ? 'text-decoration:line-through;color:var(--text3);' : ''}">${item.text}</span>
+                                ${item.tab ? `<button onclick="event.stopPropagation();switchTab('${item.tab}')" style="margin-left:auto;background:rgba(108,92,231,0.15);border:none;color:var(--accent2);font-size:11px;cursor:pointer;white-space:nowrap;padding:4px 10px;border-radius:6px;">Перейти →</button>` : ''}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>`;
+        }
+
+        function actionItemToggle(id, date) {
+            const key = `actions-checked-${date}`;
+            let checked = {};
+            try { checked = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) {}
+            const cb = $(`ac-${id}`);
+            const txt = $(`ac-text-${id}`);
+            if (!cb) return;
+            checked[id] = cb.checked;
+            localStorage.setItem(key, JSON.stringify(checked));
+            if (txt) {
+                txt.style.textDecoration = cb.checked ? 'line-through' : 'none';
+                txt.style.color = cb.checked ? 'var(--text3)' : 'var(--text)';
+            }
+        }
+
+        /* ============================== CALENDAR HEATMAP ============================== */
+        async function loadCalendarHeatmap() {
+            const container = $('calHeatmapContainer');
+            if (!container) return;
+
+            try {
+                const refDate = new Date(S.date);
+                const year = refDate.getFullYear();
+                const month = refDate.getMonth();
+                const monthStart = new Date(year, month, 1).toISOString().split('T')[0];
+                const monthEnd = S.date;
+
+                const r = await fetch(`${API}/charts/sales-trend?start_date=${monthStart}&end_date=${monthEnd}`);
+                if (!r.ok) { container.innerHTML = '<div style="color:var(--text3);font-size:13px;">Нет данных за месяц</div>'; return; }
+
+                const raw = await r.json();
+                const pts = Array.isArray(raw) ? raw : (raw.data || []);
+
+                const dayMap = {};
+                pts.forEach(p => { dayMap[p.date || p.business_date] = parseFloat(p.revenue || 0); });
+
+                const revenues = Object.values(dayMap).filter(v => v > 0);
+                const maxRev = revenues.length ? Math.max(...revenues) : 1;
+                const minRev = revenues.length ? Math.min(...revenues) : 0;
+                const totalRev = revenues.reduce((a,b) => a+b, 0);
+
+                // Сравнение с прошлым месяцем
+                let prevTotal = 0;
+                try {
+                    const prevStart = new Date(year, month-1, 1).toISOString().split('T')[0];
+                    const prevEnd = new Date(year, month, 0).toISOString().split('T')[0];
+                    const pr = await fetch(`${API}/charts/sales-trend?start_date=${prevStart}&end_date=${prevEnd}`);
+                    if (pr.ok) {
+                        const pd = await pr.json();
+                        const pp = Array.isArray(pd) ? pd : (pd.data || []);
+                        prevTotal = pp.reduce((s,p) => s + parseFloat(p.revenue||0), 0);
+                    }
+                } catch(e) {}
+
+                function colorOp(rev) {
+                    if (rev <= 0) return 0;
+                    const norm = (rev - minRev) / (maxRev - minRev || 1);
+                    if (norm >= 0.85) return 1.00;
+                    if (norm >= 0.65) return 0.75;
+                    if (norm >= 0.40) return 0.50;
+                    if (norm >= 0.20) return 0.28;
+                    return 0.12;
+                }
+
+                const daysInMonth = new Date(year, month+1, 0).getDate();
+                const firstDOW = (new Date(year, month, 1).getDay() + 6) % 7; // 0=Mon
+                const numWeeks = Math.ceil((firstDOW + daysInMonth) / 7);
+                const weekdays_short = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+                const months_ru = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+                // Средние по дням недели
+                const dowTotals = [0,0,0,0,0,0,0], dowCounts = [0,0,0,0,0,0,0];
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                    if (ds > monthEnd) break;
+                    const dow = (new Date(year,month,day).getDay()+6)%7;
+                    const rev = dayMap[ds] || 0;
+                    dowTotals[dow] += rev;
+                    if (rev > 0) dowCounts[dow]++;
+                }
+                const dowAvg = dowTotals.map((t,i) => dowCounts[i] > 0 ? t/dowCounts[i] : 0);
+                const maxDowAvg = Math.max(...dowAvg) || 1;
+
+                // Лучший / худший день
+                let bestDate='', bestRev=0, worstDate='', worstRev=Infinity;
+                Object.entries(dayMap).forEach(([dt,rev]) => {
+                    if (rev > bestRev) { bestRev=rev; bestDate=dt; }
+                    if (rev > 0 && rev < worstRev) { worstRev=rev; worstDate=dt; }
+                });
+
+                // Строим ячейки сетки
+                let headerCells = weekdays_short.map(wd =>
+                    `<div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding:3px 2px;">${wd}</div>`
+                ).join('');
+
+                let dayCells = '';
+                for (let cell = 0; cell < numWeeks * 7; cell++) {
+                    const dayNum = cell - firstDOW + 1;
+                    if (dayNum < 1 || dayNum > daysInMonth) { dayCells += `<div></div>`; continue; }
+                    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+                    const rev = dayMap[ds] || 0;
+                    const op = colorOp(rev);
+                    const isToday = ds === S.date;
+                    const isFuture = ds > monthEnd;
+                    const bg = isFuture ? 'rgba(255,255,255,0.03)' : (rev > 0 ? `rgba(83,74,183,${op})` : 'rgba(255,255,255,0.04)');
+                    const border = isToday ? '2px solid var(--accent2)' : '1px solid rgba(255,255,255,0.05)';
+                    const textColor = op > 0.5 ? '#fff' : 'var(--text3)';
+                    const title = rev > 0 ? `${ds}: ${fmtM(rev)}` : ds;
+                    dayCells += `<div title="${title}" style="aspect-ratio:1;border-radius:6px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:${isToday?'800':'500'};color:${textColor};cursor:default;transition:transform 0.12s;" onmouseover="this.style.transform='scale(1.18)'" onmouseout="this.style.transform='scale(1)'">${dayNum}</div>`;
+                }
+
+                // Сводка по дням недели (правая колонка)
+                const dowSummary = weekdays_short.map((wd,i) => {
+                    const avg = dowAvg[i];
+                    const barW = Math.round(avg / maxDowAvg * 56);
+                    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                        <div style="width:20px;font-size:10px;color:var(--text3);font-weight:700;">${wd}</div>
+                        <div style="flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;">
+                            <div style="width:${barW}px;height:100%;background:rgba(83,74,183,0.75);border-radius:3px;"></div>
+                        </div>
+                        <div style="font-size:10.5px;color:var(--text2);min-width:62px;text-align:right;">${avg > 0 ? fmtM(Math.round(avg)) : '—'}</div>
+                    </div>`;
+                }).join('');
+
+                const mc = prevTotal > 0 ? ((totalRev-prevTotal)/prevTotal*100).toFixed(0) : null;
+                const mcStr = mc !== null ? ` <span style="font-size:13px;color:${mc>=0?'#1D9E75':'#E24B4A'};">${mc>=0?'+':''}${mc}% vs пред. мес.</span>` : '';
+                const daysWithData = revenues.length;
+                const dWord = daysWithData === 1 ? 'день' : daysWithData < 5 ? 'дня' : 'дней';
+
+                container.innerHTML = `
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:22px;font-weight:800;color:#fff;line-height:1.2;">${fmt(totalRev)} ₸${mcStr}</div>
+                        <div style="font-size:12px;color:var(--text3);margin-top:3px;">${months_ru[month]} ${year} · ${daysWithData} ${dWord} с продажами</div>
+                    </div>
+                    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+                        <div style="flex:1;min-width:240px;">
+                            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">
+                                ${headerCells}${dayCells}
+                            </div>
+                        </div>
+                        <div style="width:190px;flex-shrink:0;">
+                            <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">По дням недели</div>
+                            ${dowSummary}
+                            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--bg3);">
+                                <div style="font-size:10.5px;color:var(--text3);margin-bottom:3px;">Лучший день</div>
+                                <div style="font-size:12.5px;font-weight:700;color:#1D9E75;">${bestDate ? bestDate.slice(5).replace('-','.') + ' · ' + fmtM(bestRev) : '—'}</div>
+                                <div style="font-size:10.5px;color:var(--text3);margin-top:7px;margin-bottom:3px;">Худший день</div>
+                                <div style="font-size:12.5px;font-weight:700;color:#E24B4A;">${worstDate && worstRev < Infinity ? worstDate.slice(5).replace('-','.') + ' · ' + fmtM(worstRev) : '—'}</div>
+                                <div style="font-size:10.5px;color:var(--text3);margin-top:7px;margin-bottom:3px;">Средний день</div>
+                                <div style="font-size:12.5px;font-weight:700;color:var(--text);">${daysWithData > 0 ? fmtM(Math.round(totalRev/daysWithData)) : '—'}</div>
+                            </div>
+                        </div>
+                    </div>`;
+            } catch(e) {
+                console.error('Heatmap:', e);
+                container.innerHTML = '<div style="color:var(--red);font-size:13px;">Ошибка загрузки</div>';
+            }
+        }
+
+        /* ============================== PARETO 80/20 ============================== */
+        async function loadPareto() {
+            const container = $('chartPareto');
+            const subtitle = $('paretoSubtitle');
+            if (!container) return;
+
+            try {
+                const refDate = new Date(S.date);
+                const monthStart = new Date(refDate.getFullYear(), refDate.getMonth(), 1).toISOString().split('T')[0];
+
+                const r = await fetch(`${API}/reports/product-sales/top?start_date=${monthStart}&end_date=${S.date}&limit=30&sort_by=revenue`);
+                if (!r.ok) { container.innerHTML = '<div style="color:var(--text3);padding:40px;text-align:center;">Нет данных</div>'; return; }
+
+                const data = await r.json();
+                const products = (data.products || data || [])
+                    .sort((a,b) => parseFloat(b.revenue||b.total_revenue||0) - parseFloat(a.revenue||a.total_revenue||0));
+
+                if (products.length === 0) { container.innerHTML = '<div style="color:var(--text3);padding:40px;text-align:center;">Нет данных за месяц</div>'; return; }
+
+                const total = products.reduce((s,p) => s + parseFloat(p.revenue||p.total_revenue||0), 0);
+                let cumulative = 0;
+                const withCum = products.map(p => {
+                    cumulative += parseFloat(p.revenue||p.total_revenue||0);
+                    return { ...p, cumPercent: (cumulative / total) * 100 };
+                });
+
+                const cutoffIdx = Math.max(0, withCum.findIndex(p => p.cumPercent >= 80));
+                const topN = cutoffIdx + 1;
+
+                if (subtitle) {
+                    const word = topN === 1 ? 'продукт' : topN < 5 ? 'продукта' : 'продуктов';
+                    subtitle.textContent = `${topN} ${word} делают 80% выручки · остальные ${products.length - topN} дают 20%`;
+                }
+
+                const names = withCum.map(p => {
+                    const n = p.product_name || p.name || '';
+                    return n.length > 13 ? n.slice(0,12) + '…' : n;
+                });
+                const revs = withCum.map(p => parseFloat(p.revenue||p.total_revenue||0));
+                const cumPcts = withCum.map(p => p.cumPercent);
+                const colors = withCum.map((_,i) => i <= cutoffIdx ? '#1D9E75' : '#888780');
+
+                Plotly.newPlot(container, [
+                    {
+                        type:'bar', x:names, y:revs, name:'Выручка',
+                        marker:{ color:colors },
+                        hovertemplate:'<b>%{x}</b><br>%{y:,.0f} ₸<extra></extra>',
+                        yaxis:'y'
+                    },
+                    {
+                        type:'scatter', x:names, y:cumPcts, name:'Накоп. %',
+                        mode:'lines+markers',
+                        line:{ color:'#534AB7', width:2.5 },
+                        marker:{ color:'#534AB7', size:5 },
+                        hovertemplate:'<b>%{x}</b><br>%{y:.1f}%<extra></extra>',
+                        yaxis:'y2'
+                    },
+                    {
+                        type:'scatter', x:[names[0], names[names.length-1]], y:[80,80],
+                        mode:'lines', name:'80%',
+                        line:{ color:'rgba(255,255,255,0.25)', dash:'dot', width:1.5 },
+                        hoverinfo:'skip', yaxis:'y2', showlegend:false
+                    }
+                ], {
+                    ...PL, height:300,
+                    margin:{ t:16, b:72, l:50, r:46 },
+                    yaxis:{ ...PL.yaxis, rangemode:'tozero', tickformat:',.0f' },
+                    yaxis2:{
+                        overlaying:'y', side:'right', range:[0,105],
+                        tickformat:'.0f', ticksuffix:'%', showgrid:false,
+                        tickfont:{ color:'#6b7585', size:10 }
+                    },
+                    xaxis:{ ...PL.xaxis, tickangle:-38, tickfont:{ size:9 } },
+                    showlegend:false, bargap:0.28
+                }, PC);
+            } catch(e) {
+                console.error('Pareto:', e);
+            }
+        }
+
+        /* ============================== STOCKOUT FORECAST ============================== */
+        async function loadStockoutForecast() {
+            const container = $('stockoutContainer');
+            if (!container) return;
+            container.innerHTML = '<div style="color:var(--text3);font-size:13px;">⏳ Загрузка...</div>';
+
+            try {
+                const [balR, fcR] = await Promise.all([
+                    fetch(`${API}/inventory/balance`),
+                    fetch(`${API}/analytics/inventory-forecast?analysis_days=14&forecast_days=7`)
+                ]);
+                if (!balR.ok || !fcR.ok) { container.innerHTML = '<div style="color:var(--text3);">Нет данных</div>'; return; }
+
+                const balances = await balR.json();
+                const fc = await fcR.json();
+                const fcItems = Array.isArray(fc) ? fc : (fc.forecast || fc.items || fc.data || []);
+
+                const balMap = {};
+                balances.forEach(b => balMap[b.ingredient_id] = b);
+
+                const joined = fcItems.map(item => {
+                    const b = balMap[item.ingredient_id] || {};
+                    return {
+                        name: item.ingredient_name || b.ingredient_name || 'Ингредиент',
+                        unit: item.unit || b.unit || '',
+                        balance: parseFloat(b.balance || item.current_balance || 0),
+                        min_stock: parseFloat(b.min_stock || b.norm_stock || 0),
+                        days: parseFloat(item.days_remaining ?? item.days_until_stockout ?? 999),
+                        daily_avg: parseFloat(item.daily_avg_usage || item.avg_daily_usage || 0),
+                    };
+                }).filter(i => i.days < 14).sort((a,b) => a.days - b.days).slice(0, 8);
+
+                if (joined.length === 0) {
+                    container.innerHTML = '<div style="color:var(--green);font-size:13px;padding:12px 0;">✅ Все запасы в норме — хватит более чем на 14 дней</div>';
+                    return;
+                }
+
+                function daysColor(d) { return d <= 3 ? '#E24B4A' : d <= 7 ? '#BA7517' : '#1D9E75'; }
+                function daysLabel(d) {
+                    const n = Math.ceil(d);
+                    if (n <= 0) return 'кончился';
+                    const m10 = n%10, m100 = n%100;
+                    const w = (m100>=11&&m100<=19) ? 'дней' : m10===1 ? 'день' : (m10>=2&&m10<=4) ? 'дня' : 'дней';
+                    return `${n} ${w}`;
+                }
+
+                const fmtN = v => new Intl.NumberFormat('ru-RU',{maximumFractionDigits:1}).format(v);
+                const fmtN2 = v => new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(v);
+
+                container.innerHTML = joined.map(item => {
+                    const pct = item.min_stock > 0 ? Math.min(100, Math.round(item.balance/item.min_stock*100)) : 0;
+                    const dc = daysColor(item.days);
+                    return `
+                        <div style="display:flex;align-items:stretch;margin-bottom:13px;">
+                            <div style="width:3px;border-radius:2px;background:${dc};flex-shrink:0;margin-right:12px;"></div>
+                            <div style="flex:1;">
+                                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;">
+                                    <div style="font-size:13.5px;font-weight:600;color:var(--text);">${item.name}</div>
+                                    <div style="font-size:14px;font-weight:800;color:${dc};white-space:nowrap;margin-left:8px;">${daysLabel(item.days)}</div>
+                                </div>
+                                <div style="font-size:11px;color:var(--text3);margin-bottom:5px;">${fmtN(item.balance)} ${item.unit} · ${fmtN2(item.daily_avg)} ${item.unit}/день${item.min_stock > 0 ? ` · норма ${fmtN(item.min_stock)} ${item.unit}` : ''}</div>
+                                ${item.min_stock > 0 ? `<div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${dc};border-radius:2px;transition:width 0.4s;"></div></div>` : ''}
+                            </div>
+                        </div>`;
+                }).join('') + `
+                    <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bg3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                        <div style="display:flex;gap:14px;font-size:11px;color:var(--text3);">
+                            <span><span style="color:#E24B4A;font-weight:700;">●</span> ≤3 дня</span>
+                            <span><span style="color:#BA7517;font-weight:700;">●</span> 3–7 дней</span>
+                            <span><span style="color:#1D9E75;font-weight:700;">●</span> >7 дней</span>
+                        </div>
+                        <button onclick="switchTab('purchase-order')" class="btn btn-sm" style="background:rgba(108,92,231,0.18);color:var(--accent2);border:1px solid rgba(108,92,231,0.3);">Открыть заявку →</button>
+                    </div>`;
+            } catch(e) {
+                console.error('Stockout:', e);
+                container.innerHTML = '<div style="color:var(--red);font-size:13px;">Ошибка загрузки прогноза</div>';
             }
         }
 
@@ -2477,48 +2992,7 @@
                 }
             } catch (e) { console.error('Trend:', e); }
 
-            // 2. Топ-10 продуктов (за 7 дней)
-            try {
-                const r = await fetch(`${API}/reports/product-sales/top?start_date=${start}&end_date=${end}&limit=10&sort_by=revenue`);
-                if (r.ok) {
-                    const d = (await r.json()).products || [];
-                    if (d.length === 0) {
-                        $('chartTop').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:13px;">Нет данных</div>';
-                    } else {
-                        const sortedProds = d.reverse();
-                        const y = sortedProds.map(p => p.product_name);
-                        const x = sortedProds.map(p => parseFloat(p.revenue));
-                        const barColors = sortedProds.map(p => {
-                            const mrg = parseFloat(p.margin_percent || 0);
-                            if (mrg > 60) return 'rgba(0,229,160,0.82)';
-                            if (mrg >= 40) return 'rgba(77,157,255,0.82)';
-                            return 'rgba(255,107,138,0.82)';
-                        });
-                        const txt = sortedProds.map(p => {
-                            const mrg = parseFloat(p.margin_percent || 0);
-                            return `${fmt(parseFloat(p.revenue))} ₸  ${Math.round(mrg)}%`;
-                        });
-                        Plotly.newPlot('chartTop', [{
-                            x: x, y: y, type: 'bar', orientation: 'h',
-                            text: txt, textposition: 'inside', insidetextanchor: 'end',
-                            textfont: { color: 'rgba(255,255,255,0.9)', size: 10.5, family: 'Inter, system-ui' },
-                            marker: {
-                                color: barColors,
-                                line: { color: 'rgba(255,255,255,0.08)', width: 0.5 },
-                                opacity: 1
-                            },
-                            hovertemplate: '<b>%{y}</b><br>Выручка: %{x:,.0f} ₸<extra></extra>'
-                        }], {
-                            ...PL,
-                            margin: { ...PL.margin, l: 155, r: 16 },
-                            xaxis: { visible: false },
-                            bargap: 0.32
-                        }, PC);
-                    }
-                }
-            } catch (e) { console.error('Top:', e); }
-
-            // 3. Category Sales (Bar Chart)
+            // 2. Category Sales (Bar Chart)
             try {
                 const r = await fetch(`${API}/analytics/category-sales?business_date=${S.date}`);
                 if (r.ok) {
@@ -2560,28 +3034,6 @@
                 }
             } catch (e) { console.error('Cat:', e); }
 
-            // 4. Usage (Расширен до Топ-9 ингредиентов)
-            try {
-                const r = await fetch(`${API}/charts/ingredient-usage?start_date=${start}&end_date=${end}&limit=9`);
-                if (r.ok) {
-                    const d = (await r.json()).data || [];
-                    Plotly.newPlot('chartUsage', d.map((item, i) => ({
-                        x: item.dates, y: item.values,
-                        type: 'scatter', mode: 'lines+markers',
-                        name: item.name,
-                        line: { width: 2.5, color: COLORS[i % COLORS.length], shape: 'spline', smoothing: 0.7 },
-                        marker: {
-                            size: 5, color: COLORS[i % COLORS.length],
-                            line: { color: 'rgba(255,255,255,0.4)', width: 1 }
-                        },
-                        hovertemplate: `<b>${item.name}</b><br>%{x}<br><b>%{y:,.0f} г</b><extra></extra>`
-                    })), {
-                        ...PL, height: 300,
-                        yaxis: { ...PL.yaxis, rangemode: 'tozero', tickformat: ',.0f' },
-                        legend: { ...PL.legend, y: -0.38 }
-                    }, PC);
-                }
-            } catch (e) { console.error('Usage:', e); }
         }
 
 
