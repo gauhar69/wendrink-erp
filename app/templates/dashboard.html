@@ -1926,8 +1926,9 @@
         <div id="products-section" class="tab-section">
             <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
                 <span style="font-size:14px;font-weight:700;color:var(--accent2);">Продукты</span>
+                <button class="btn btn-primary" onclick="productOpenAdd()" style="margin-left:auto;">➕ Добавить продукт</button>
                 <button onclick="exportProductsExcel()"
-                    style="margin-left:auto;padding:6px 16px;background:rgba(0,200,83,0.15);border:1px solid rgba(0,200,83,0.5);color:#00c853;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;">📥
+                    style="padding:6px 16px;background:rgba(0,200,83,0.15);border:1px solid rgba(0,200,83,0.5);color:#00c853;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;">📥
                     Excel</button>
             </div>
             <div class="table-wrap" style="max-height:70vh;overflow-y:auto;">
@@ -1956,8 +1957,9 @@
             <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
                 <input type="text" id="recipeSearch" placeholder="Поиск по блюду или ингредиенту..."
                     style="width:300px;" oninput="filterRecipes()">
+                <button class="btn btn-primary" onclick="recipeOpenAdd()" style="margin-left:auto;">➕ Добавить рецепт</button>
                 <button onclick="exportRecipesExcel()"
-                    style="margin-left:auto;padding:6px 16px;background:rgba(0,200,83,0.15);border:1px solid rgba(0,200,83,0.5);color:#00c853;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;">📥
+                    style="padding:6px 16px;background:rgba(0,200,83,0.15);border:1px solid rgba(0,200,83,0.5);color:#00c853;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;">📥
                     Excel</button>
             </div>
             <div class="table-wrap" style="max-height:70vh;overflow-y:auto;">
@@ -2008,7 +2010,8 @@
                 <span style="font-size:14px;font-weight:700;color:var(--accent2);">Управление ценами сырья</span>
                 <span style="font-size:12px;color:var(--text3);margin-left:8px;">Поставка 1 коробки по новой цене
                     — себестоимость пересчитается мгновенно</span>
-                <button onclick="exportPricesExcel()" class="btn btn-ghost" style="margin-left:auto;">📥 Excel</button>
+                <button class="btn btn-primary" onclick="ingredientOpenAdd()" style="margin-left:auto;">➕ Добавить сырье</button>
+                <button onclick="exportPricesExcel()" class="btn btn-ghost">📥 Excel</button>
             </div>
             <div class="table-wrap" style="max-height:70vh;overflow-y:auto;">
                 <table>
@@ -2122,9 +2125,217 @@
             </div>
         </div>
 
+        <!-- ======================== NEW MODALS ======================== -->
+        
+        <!-- Modal: Add Product -->
+        <div id="productAddModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;align-items:center;justify-content:center;">
+            <div style="background:var(--bg2);padding:24px;border-radius:12px;width:100%;max-width:400px;border:1px solid var(--border);">
+                <div style="font-size:18px;font-weight:700;margin-bottom:16px;">Добавить продукт</div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div>
+                        <label style="font-size:12px;color:var(--text3);">Название продукта</label>
+                        <input type="text" id="paName" style="width:100%;" placeholder="Например: Капучино">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text3);">Цена (₸)</label>
+                        <input type="number" id="paPrice" style="width:100%;" placeholder="1500" step="0.01">
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:20px;justify-content:flex-end;">
+                    <button class="btn btn-ghost" onclick="productCloseAdd()">Отмена</button>
+                    <button class="btn btn-primary" onclick="productSubmitAdd()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Add Ingredient -->
+        <div id="ingredientAddModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;align-items:center;justify-content:center;">
+            <div style="background:var(--bg2);padding:24px;border-radius:12px;width:100%;max-width:400px;border:1px solid var(--border);">
+                <div style="font-size:18px;font-weight:700;margin-bottom:16px;">Добавить сырье</div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div>
+                        <label style="font-size:12px;color:var(--text3);">Наименование</label>
+                        <input type="text" id="iaName" style="width:100%;" placeholder="Кофе зерновой">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text3);">SKU (Артикул)</label>
+                        <input type="text" id="iaSku" style="width:100%;" placeholder="COFFEE-001">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text3);">Единица измерения</label>
+                        <select id="iaUnit" style="width:100%;">
+                            <option value="g">Грамм (g)</option>
+                            <option value="ml">Миллилитр (ml)</option>
+                            <option value="pcs">Штука (pcs)</option>
+                            <option value="kg">Килограмм (kg)</option>
+                            <option value="l">Литр (l)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text3);">Размер упаковки (в базовых ед.)</label>
+                        <input type="number" id="iaPackageSize" style="width:100%;" placeholder="1000" step="0.001">
+                        <div style="font-size:11px;color:var(--text3);margin-top:4px;">Например: 1 кг = 1000 грамм</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:20px;justify-content:flex-end;">
+                    <button class="btn btn-ghost" onclick="ingredientCloseAdd()">Отмена</button>
+                    <button class="btn btn-primary" onclick="ingredientSubmitAdd()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Add Recipe -->
+        <div id="recipeAddModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;align-items:center;justify-content:center;">
+            <div style="background:var(--bg2);padding:24px;border-radius:12px;width:100%;max-width:400px;border:1px solid var(--border);">
+                <div style="font-size:18px;font-weight:700;margin-bottom:16px;">Добавить рецепт</div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div>
+                        <label style="font-size:12px;color:var(--text3);">Продукт (Блюдо)</label>
+                        <select id="raProduct" style="width:100%;"></select>
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text3);">Ингредиент</label>
+                        <select id="raIngredient" style="width:100%;"></select>
+                    </div>
+                    <div>
+                        <label style="font-size:12px;color:var(--text3);">Расход (Количество)</label>
+                        <input type="number" id="raQuantity" style="width:100%;" placeholder="0.00" step="0.0001">
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:20px;justify-content:flex-end;">
+                    <button class="btn btn-ghost" onclick="recipeCloseAdd()">Отмена</button>
+                    <button class="btn btn-primary" onclick="recipeSubmitAdd()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
     </div><!-- /main -->
 
     <script>
+        /* ============================== ADD MANUAL COMPONENTS ============================== */
+        
+        function productOpenAdd() {
+            $('paName').value = '';
+            $('paPrice').value = '';
+            $('productAddModal').style.display = 'flex';
+        }
+        function productCloseAdd() {
+            $('productAddModal').style.display = 'none';
+        }
+        async function productSubmitAdd() {
+            const name = $('paName').value.trim();
+            const price = parseFloat($('paPrice').value);
+            if(!name || isNaN(price)) return alert('Введите название и цену');
+            
+            try {
+                const res = await fetch(`${API}/products`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, price, is_active: true })
+                });
+                if(res.ok) {
+                    productCloseAdd();
+                    loadProducts();
+                } else {
+                    const err = await res.json();
+                    alert(err.detail || 'Ошибка при добавлении продукта');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Сетевая ошибка');
+            }
+        }
+        
+        function ingredientOpenAdd() {
+            $('iaName').value = '';
+            $('iaSku').value = '';
+            $('iaPackageSize').value = '1000';
+            $('ingredientAddModal').style.display = 'flex';
+        }
+        function ingredientCloseAdd() {
+            $('ingredientAddModal').style.display = 'none';
+        }
+        async function ingredientSubmitAdd() {
+            const name = $('iaName').value.trim();
+            const sku = $('iaSku').value.trim();
+            const unit = $('iaUnit').value;
+            const package_size = parseFloat($('iaPackageSize').value);
+            if(!name || !sku || isNaN(package_size)) return alert('Заполните все поля');
+            
+            try {
+                const res = await fetch(`${API}/ingredients`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, sku, unit, package_size })
+                });
+                if(res.ok) {
+                    ingredientCloseAdd();
+                    loadPrices();
+                } else {
+                    const err = await res.json();
+                    alert(err.detail || 'Ошибка при добавлении сырья');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Сетевая ошибка');
+            }
+        }
+        
+        async function recipeOpenAdd() {
+            try {
+                const [pres, ires] = await Promise.all([
+                    fetch(`${API}/products?limit=1000`),
+                    fetch(`${API}/ingredients?limit=1000`)
+                ]);
+                const prods = await pres.json();
+                const ings = await ires.json();
+                
+                // Sort products and ingredients alphabetically
+                prods.sort((a,b) => a.name.localeCompare(b.name));
+                ings.sort((a,b) => a.name.localeCompare(b.name));
+                
+                const pSel = $('raProduct');
+                pSel.innerHTML = '<option value="">-- Выберите блюдо --</option>' + prods.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+                
+                const iSel = $('raIngredient');
+                iSel.innerHTML = '<option value="">-- Выберите сырье --</option>' + ings.map(i => `<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');
+                
+                $('raQuantity').value = '';
+                $('recipeAddModal').style.display = 'flex';
+            } catch(e) {
+                console.error(e);
+                alert('Ошибка загрузки данных для рецепта');
+            }
+        }
+        function recipeCloseAdd() {
+            $('recipeAddModal').style.display = 'none';
+        }
+        async function recipeSubmitAdd() {
+            const product_id = $('raProduct').value;
+            const ingredient_id = $('raIngredient').value;
+            const quantity = parseFloat($('raQuantity').value);
+            
+            if(!product_id || !ingredient_id || isNaN(quantity)) return alert('Заполните все поля');
+            
+            try {
+                const res = await fetch(`${API}/recipes`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ product_id, ingredient_id, quantity })
+                });
+                if(res.ok) {
+                    recipeCloseAdd();
+                    loadRecipes();
+                } else {
+                    const err = await res.json();
+                    alert(err.detail || 'Ошибка при добавлении рецепта');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Сетевая ошибка');
+            }
+        }
+
         /* ============================== GLOBALS ============================== */
         const API = '';
         const today = new Date().toISOString().split('T')[0];

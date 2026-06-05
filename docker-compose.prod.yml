@@ -19,6 +19,14 @@ services:
     container_name: wendrink_tunnel
     restart: always
     command: tunnel --no-autoupdate run --token ${CF_TOKEN}
+  bot:
+    build:
+      context: ./bot
+    container_name: wendrink_bot
+    restart: always
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     depends_on:
       - n8n
 

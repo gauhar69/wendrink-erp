@@ -39,10 +39,13 @@ async def create_product(
     - **price**: Selling price in KZT (Decimal)
     - **is_active**: Whether product is available for sale
     """
+    import uuid
+    generated_sku = f"PROD-{uuid.uuid4().hex[:8].upper()}"
     product = Product(
         name=data.name,
         price=data.price,
         is_active=data.is_active,
+        sku=generated_sku,
     )
     
     session.add(product)

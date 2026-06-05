@@ -5,6 +5,50 @@ WENDRINK ERP - система управления кафе/баром в Алм
 Стек: FastAPI + SQLAlchemy (async) + SQLite + Jinja2 + Plotly.js
 Валюта: тенге (₸). Timezone: Asia/Almaty. Business day cutoff: 06:00.
 
+## 🖥️ ИНФРАСТРУКТУРА (читать при каждом старте)
+
+| Параметр | Значение |
+|----------|----------|
+| Продакшн URL | https://n8n-483921.gripe/dashboard |
+| Сервер IP | 80.225.201.64 |
+| SSH пользователь | ubuntu |
+| SSH ключ | C:\Users\ARMAN\.ssh\wendrink_new ✅ РАБОТАЕТ (добавлен на сервер 02.05.2026) |
+| Папка на сервере | ~/wendrink-erp |
+| Папка на ПК | C:\Users\ARMAN\super-app-cost-calc |
+| GitHub репо | https://github.com/gauhar69/wendrink-erp (private) |
+| GitHub аккаунт | gauhar69 |
+| GitHub PAT | ghp_************************************ |
+
+### Быстрый деплой (основной способ)
+```
+ssh -i C:\Users\ARMAN\.ssh\wendrink_new ubuntu@80.225.201.64 "cd ~/wendrink-erp && git pull && sudo docker compose -f docker-compose.prod.yml up -d --build"
+```
+
+### Восстановление доступа если SSH ключ утерян (через Oracle Bastion)
+1. Сгенерируй новый ключ на ПК локально: `ssh-keygen -t ed25519 -f C:\Users\ARMAN\.ssh\wendrink_new -N ""`
+2. Открой https://cloud.oracle.com → меню **☰** → **Identity & Security** → **Bastion**.
+3. Зайди в свой бастион (например, `recovery-bastion`) → Вкладка **Sessions** → **Create session**.
+4. Выбери: **Managed SSH session**, Username: `ubuntu`, Compute instance: `n8n-server`.
+5. В разделе SSH key выбери **Choose SSH key file** и загрузи публичный ключ с ПК (например, `wendrink_new.pub`).
+6. Дождись статуса **Active** (зеленый). Скопируй **SSH command** (через три точки справа).
+7. Замени в команде `<privateKey>` на путь к приватному ключу на твоем ПК (`C:\Users\ARMAN\.ssh\wendrink_new`) и выполни её в **PowerShell**.
+8. Войдя на сервер (увидишь `ubuntu@n8n-server:~$`), пропиши свой публичный ключ навсегда:
+   `echo "ssh-ed25519 ТВОЙ_ПУБЛИЧНЫЙ_КЛЮЧ" >> ~/.ssh/authorized_keys`
+9. Теперь можешь входить напрямую: `ssh -i C:\Users\ARMAN\.ssh\wendrink_new ubuntu@80.225.201.64`
+
+## 📦 УСТАНОВЛЕННЫЕ СКИЛЛЫ (май 2026)
+- `ui-ux-pro-max` — 161 палитра, 57 пар шрифтов, 50+ стилей UI
+- `frontend-design` — правила типографики, spacing, анимаций
+- Путь: C:\Users\ARMAN\.claude\skills\ и C:\Users\ARMAN\super-app-cost-calc\.claude\skills\
+
+## 🔄 ТЕКУЩИЙ СТАТУС ЗАДАЧ (май 2026)
+
+| Задача | Статус | Примечание |
+|--------|--------|------------|
+| PATCH-010: двойная инвентаризация | ✅ ИСПРАВЛЕНО | fix_double_stocktake.py запущен, UI кнопки разделены |
+| PDF экспорт мобильный Firefox | ✅ ЗАДЕПЛОЕНО | git pull + rebuild выполнен 02.05.2026, коммит ada3d89 |
+| SSH ключ | ✅ ВОССТАНОВЛЕН | C:\Users\ARMAN\.ssh\wendrink_new добавлен через Oracle Bastion 02.05.2026 |
+
 ## 🚨 КРИТИЧЕСКИЕ ПРАВИЛА (НЕ НАРУШАТЬ!)
 
 ### 1. НИКОГДА не трогай рабочий код без плана
@@ -34,7 +78,21 @@ WENDRINK ERP - система управления кафе/баром в Алм
 
 ## 📋 ПАМЯТЬ ОШИБОК (PATCHES)
 
-**ИТОГО: 8 патчей** (последний аудит: 2026-02-19, 48✅ / 0❌)
+**ИТОГО: 10 патчей** (последний аудит: 2026-04-10)
+
+### PATCH-010: Двойное применение инвентаризации (кнопки UI)
+- **Дата:** 2026-04-10
+- **Проблема:** В форме инвентаризации показывались все 3 кнопки одновременно: "Сохранить", "Завершить" (→ /complete) и "Применить к остаткам" (→ /reapply). Обе последние кнопки применяют корректировки к остаткам. Нажатие обеих = двойное списание
+- **Результат:** 09.04.2026 все 38 ингредиентов списаны дважды. Бэкап: wendrink_backup_20260410_154402.db. Исправлено скриптом fix_double_stocktake.py
+- **Фикс:** В dashboard.html кнопки разделены по статусу: DRAFT → только "Сохранить" + "Завершить"; COMPLETED → только "Применить к остаткам"
+- **Правило:** Кнопки меняющие статус и кнопки применяющие данные НИКОГДА не должны показываться одновременно
+
+### PATCH-009: current_price не обновлялся при приходе товара
+- **Дата:** 2026-04-03
+- **Проблема:** При записи прихода (SUPPLY) `ingredient.current_price` не обновлялся. Заявка и Цены сырья всегда показывали старую цену из справочника
+- **Результат:** Пользователь видел неактуальные цены в Заявке даже после нового прихода
+- **Фикс:** В `record_supply()` и `create_bulk_supply()` добавлено автообновление `ingredient.current_price = unit_cost`
+- **Правило:** При каждом SUPPLY событии ВСЕГДА обновлять `ingredient.current_price`
 
 ### PATCH-001: Payroll не аллоцирует fixed costs
 - **Дата:** 2026-02-18
