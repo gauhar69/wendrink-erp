@@ -1218,6 +1218,17 @@
                     </div>
                 </div>
 
+                <!-- Анализ по дням недели -->
+                <div id="anDayOfWeekBlock" style="display:none;margin-top:20px;">
+                    <div class="card">
+                        <div class="card-title" style="margin-bottom:12px;">📅 Анализ по дням недели (Пн-Вс)</div>
+                        <div id="anDayOfWeekComparison" style="font-size:14px;font-weight:700;margin-bottom:16px;line-height:1.4;background:rgba(255,255,255,0.02);padding:10px 14px;border-radius:8px;border-left:4px solid var(--accent2);"></div>
+                        <div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:10px;" id="anDayOfWeekGrid">
+                            <!-- Сюда будут вставляться данные по дням недели -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Топ продуктов -->
                 <div class="card" style="margin-top:20px;">
                     <div style="display:flex;justify-content:between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:12px;">
@@ -5006,6 +5017,15 @@
                 // Загружаем топ продуктов
                 await anLoadTopProducts();
 
+                // Загружаем аналитику по дням недели
+                const start = data.start_date || data.business_date;
+                const end = data.end_date || data.business_date;
+                if (anState.period !== 'day' && start && end) {
+                    await anLoadDOW(start, end);
+                } else {
+                    $('anDayOfWeekBlock').style.display = 'none';
+                }
+
                 toast('✅ Данные загружены', true);
             } catch (e) {
                 console.error('Analytics error:', e);
@@ -5236,6 +5256,98 @@
                 anRenderProducts();
             } catch (e) {
                 console.error('Top products error:', e);
+            }
+        }
+
+        async function anLoadDOW(start, end) {
+            try {
+                const r = await fetch(`${API}/charts/sales-trend?start_date=${start}&end_date=${end}`);
+                if (!r.ok) return;
+                const res = await r.json();
+                const pts = Array.isArray(res) ? res : (res.data || []);
+                
+                const dowData = Array.from({ length: 7 }, () => ({
+                    revenue: 0,
+                    cogs: 0,
+                    opex: 0,
+                    net_profit: 0,
+                    count: 0
+                }));
+                
+                pts.forEach(p => {
+                    const dateStr = p.business_date || p.date;
+                    if (!dateStr) return;
+                    
+                    const parts = dateStr.split('-');
+                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                    const dow = (d.getDay() + 6) % 7;
+                    
+                    dowData[dow].revenue += parseFloat(p.revenue || 0);
+                    dowData[dow].cogs += parseFloat(p.cogs || 0);
+                    dowData[dow].opex += parseFloat(p.opex || 0);
+                    dowData[dow].net_profit += parseFloat(p.net_profit || 0);
+                    dowData[dow].count += 1;
+                });
+                
+                const weekdays = { revenue: 0, count: 0 };
+                const weekends = { revenue: 0, count: 0 };
+                
+                const dayNamesShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+                
+                let gridHtml = '';
+                dowData.forEach((data, dow) => {
+                    const count = data.count || 1;
+                    const avgRev = data.revenue / count;
+                    const avgProfit = data.net_profit / count;
+                    const margin = data.revenue > 0 ? ((data.revenue - data.cogs) / data.revenue * 100) : 0;
+                    
+                    if (dow < 5) {
+                        weekdays.revenue += data.revenue;
+                        weekdays.count += data.count;
+                    } else {
+                        weekends.revenue += data.revenue;
+                        weekends.count += data.count;
+                    }
+                    
+                    const profitColor = avgProfit >= 0 ? 'var(--green)' : 'var(--red)';
+                    const cardBg = (dow >= 5) ? 'rgba(255,157,77,0.04)' : 'rgba(255,255,255,0.02)';
+                    const cardBorder = (dow >= 5) ? '1px solid rgba(255,157,77,0.15)' : '1px solid rgba(255,255,255,0.05)';
+                    
+                    gridHtml += `
+                        <div style="background:${cardBg};border:${cardBorder};padding:12px;text-align:center;border-radius:8px;">
+                            <div style="font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;">${dayNamesShort[dow]}</div>
+                            <div style="font-size:15px;font-weight:700;color:var(--text);margin:6px 0;">${fmtM(Math.round(avgRev))}</div>
+                            <div style="font-size:10.5px;color:${profitColor};font-weight:600;">
+                                ${avgProfit >= 0 ? '+' : ''}${fmt(Math.round(avgProfit))} ₸ (${margin.toFixed(0)}%)
+                            </div>
+                            <div style="font-size:9px;color:var(--text3);margin-top:4px;">дней: ${data.count}</div>
+                        </div>
+                    `;
+                });
+                
+                $('anDayOfWeekGrid').innerHTML = gridHtml;
+                
+                const avgWeekday = weekdays.count > 0 ? (weekdays.revenue / weekdays.count) : 0;
+                const avgWeekend = weekends.count > 0 ? (weekends.revenue / weekends.count) : 0;
+                
+                let compText = '';
+                if (avgWeekday > 0 || avgWeekend > 0) {
+                    if (avgWeekend < avgWeekday) {
+                        const diffPct = ((avgWeekday - avgWeekend) / avgWeekday * 100).toFixed(0);
+                        compText = `⚠️ <span style="color:var(--orange);">Выходные проседают:</span> в среднем <span style="color:var(--orange);font-weight:800;">${fmtM(Math.round(avgWeekend))}</span> в день, что на <span style="color:var(--red);font-weight:800;">${diffPct}% меньше</span>, чем в будни (<span style="font-weight:700;">${fmtM(Math.round(avgWeekday))}</span>)`;
+                    } else {
+                        const diffPct = ((avgWeekend - avgWeekday) / avgWeekday * 100).toFixed(0);
+                        compText = `🟢 <span style="color:var(--green);">Выходные показывают рост:</span> в среднем <span style="color:var(--green);font-weight:800;">${fmtM(Math.round(avgWeekend))}</span> в день, что на <span style="color:var(--green);font-weight:800;">${diffPct}% больше</span>, чем в будни (<span style="font-weight:700;">${fmtM(Math.round(avgWeekday))}</span>)`;
+                    }
+                } else {
+                    compText = 'Нет данных для анализа будней и выходных';
+                }
+                
+                $('anDayOfWeekComparison').innerHTML = compText;
+                $('anDayOfWeekBlock').style.display = 'block';
+            } catch(e) {
+                console.error('Day of week analytics error:', e);
+                $('anDayOfWeekBlock').style.display = 'none';
             }
         }
 
