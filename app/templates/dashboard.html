@@ -4975,17 +4975,22 @@
                     if (!date) { toast('Укажи дату', false); return; }
                     endpoint = `/reports/daily-pnl/${date}`;
                 } else if (anState.period === 'week') {
+                    const date = $('anDate').value;
                     endpoint = '/reports/sales/week';
+                    if (date) {
+                        params = `?date=${date}`;
+                    }
                 } else if (anState.period === 'month') {
                     const date = new Date($('anDate').value || S.date);
                     const year = date.getFullYear();
                     const month = date.getMonth() + 1;
-                    endpoint = `/reports/monthly-pnl/${year}/${month}`;
+                    endpoint = '/reports/sales/month';
+                    params = `?year=${year}&month=${month}`;
                 } else if (anState.period === 'custom') {
                     const start = $('anStartDate').value;
                     const end = $('anEndDate').value;
                     if (!start || !end) { toast('Укажи даты начала и конца', false); return; }
-                    endpoint = `/reports/pnl-range`;
+                    endpoint = `/reports/sales/period`;
                     params = `?start_date=${start}&end_date=${end}`;
                 }
 

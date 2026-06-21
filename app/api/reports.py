@@ -1136,6 +1136,7 @@ class PeriodSummaryResponse(BaseModel):
     summary="Get This Week's Sales",
 )
 async def get_sales_week(
+    date: date = Query(None, description="Date in target week (default: current business date)"),
     session: AsyncSession = Depends(get_db),
 ) -> PeriodSummaryResponse:
     """
@@ -1147,17 +1148,19 @@ async def get_sales_week(
     from datetime import timedelta
     
     today = get_business_date()
+    target_date = date or today
     
     # Calculate week bounds (Monday to Sunday)
-    days_since_monday = today.weekday()
-    week_start = today - timedelta(days=days_since_monday)
+    days_since_monday = target_date.weekday()
+    week_start = target_date - timedelta(days=days_since_monday)
     week_end = week_start + timedelta(days=6)
     
     # Previous week
     prev_week_start = week_start - timedelta(days=7)
     prev_week_end = week_start - timedelta(days=1)
     
-    current = await _get_period_summary(session, week_start, min(week_end, today))
+    actual_end = min(week_end, today) if week_start <= today else week_end
+    current = await _get_period_summary(session, week_start, actual_end)
     previous = await _get_period_summary(session, prev_week_start, prev_week_end)
     
     # Calculate change
@@ -1171,7 +1174,7 @@ async def get_sales_week(
     return PeriodSummaryResponse(
         period_name="week",
         start_date=str(week_start),
-        end_date=str(min(week_end, today)),
+        end_date=str(actual_end),
         days=current["days"],
         revenue=str(current["revenue"]),
         cogs=str(current["cogs"]),
