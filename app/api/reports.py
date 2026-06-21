@@ -1122,6 +1122,12 @@ class PeriodSummaryResponse(BaseModel):
     best_day_revenue: str | None
     worst_day: str | None
     worst_day_revenue: str | None
+    
+    # Financial metrics
+    waste_amount: str
+    opex_total: str
+    net_profit: str
+    net_margin_percent: str
 
 
 @router.get(
@@ -1181,6 +1187,10 @@ async def get_sales_week(
         best_day_revenue=str(current["best_revenue"]) if current["best_revenue"] else None,
         worst_day=current["worst_day"],
         worst_day_revenue=str(current["worst_revenue"]) if current["worst_revenue"] else None,
+        waste_amount=str(current["waste_amount"]),
+        opex_total=str(current["opex_total"]),
+        net_profit=str(current["net_profit"]),
+        net_margin_percent=str(current["net_margin_percent"]),
     )
 
 
@@ -1257,6 +1267,10 @@ async def get_sales_month(
         best_day_revenue=str(current["best_revenue"]) if current["best_revenue"] else None,
         worst_day=current["worst_day"],
         worst_day_revenue=str(current["worst_revenue"]) if current["worst_revenue"] else None,
+        waste_amount=str(current["waste_amount"]),
+        opex_total=str(current["opex_total"]),
+        net_profit=str(current["net_profit"]),
+        net_margin_percent=str(current["net_margin_percent"]),
     )
 
 
@@ -1324,6 +1338,10 @@ async def get_sales_period(
         best_day_revenue=str(current["best_revenue"]) if current["best_revenue"] else None,
         worst_day=current["worst_day"],
         worst_day_revenue=str(current["worst_revenue"]) if current["worst_revenue"] else None,
+        waste_amount=str(current["waste_amount"]),
+        opex_total=str(current["opex_total"]),
+        net_profit=str(current["net_profit"]),
+        net_margin_percent=str(current["net_margin_percent"]),
     )
 
 
@@ -1333,8 +1351,56 @@ async def _get_period_summary(session: AsyncSession, start: date, end: date) -> 
     from sqlalchemy import func, select
     from app.models import Sale
     from app.models.sale import SaleItem
+    from app.models.inventory_ledger import InventoryLedger, InventoryEventType
+    from app.models.finance_ledger import FinanceLedger
     
     days = (end - start).days + 1
+    
+    # 1. Query all sales in the range grouped by business_date
+    sales_query = (
+        select(
+            Sale.business_date,
+            func.count(Sale.id).label("tx_count"),
+            func.coalesce(func.sum(Sale.total_amount), Decimal("0")).label("revenue"),
+            func.coalesce(func.sum(Sale.total_cost), Decimal("0")).label("cogs"),
+        )
+        .where(Sale.business_date >= start)
+        .where(Sale.business_date <= end)
+        .group_by(Sale.business_date)
+    )
+    sales_result = await session.execute(sales_query)
+    sales_by_date = {row.business_date: row for row in sales_result.all()}
+    
+    # 2. Query all sale items in the range grouped by business_date
+    items_query = (
+        select(
+            Sale.business_date,
+            func.coalesce(func.sum(SaleItem.quantity), Decimal("0")).label("items")
+        )
+        .join(Sale, Sale.id == SaleItem.sale_id)
+        .where(Sale.business_date >= start)
+        .where(Sale.business_date <= end)
+        .group_by(Sale.business_date)
+    )
+    items_result = await session.execute(items_query)
+    items_by_date = {row.business_date: int(row.items) for row in items_result.all()}
+    
+    # 3. Query waste in range
+    waste_result = await session.execute(
+        select(func.coalesce(func.sum(InventoryLedger.cost_snapshot), Decimal("0")))
+        .where(InventoryLedger.event_type == InventoryEventType.WASTE.value)
+        .where(InventoryLedger.business_date >= start)
+        .where(InventoryLedger.business_date <= end)
+    )
+    total_waste = Decimal(str(waste_result.scalar() or "0"))
+    
+    # 4. Query OPEX in range
+    opex_result = await session.execute(
+        select(func.coalesce(func.sum(FinanceLedger.amount), Decimal("0")))
+        .where(FinanceLedger.business_date >= start)
+        .where(FinanceLedger.business_date <= end)
+    )
+    total_opex = Decimal(str(opex_result.scalar() or "0"))
     
     total_revenue = Decimal("0")
     total_cogs = Decimal("0")
@@ -1347,34 +1413,21 @@ async def _get_period_summary(session: AsyncSession, start: date, end: date) -> 
     
     current = start
     while current <= end:
-        # Get daily data
-        query = (
-            select(
-                func.count(Sale.id).label("tx_count"),
-                func.coalesce(func.sum(Sale.total_amount), Decimal("0")).label("revenue"),
-                func.coalesce(func.sum(Sale.total_cost), Decimal("0")).label("cogs"),
-            )
-            .where(Sale.business_date == current)
-        )
-        result = await session.execute(query)
-        row = result.one()
-        
-        tx_count = row.tx_count or 0
-        revenue = Decimal(str(row.revenue))
-        cogs = Decimal(str(row.cogs))
-        
-        # Items
-        items_query = (
-            select(func.sum(SaleItem.quantity))
-            .join(Sale, Sale.id == SaleItem.sale_id)
-            .where(Sale.business_date == current)
-        )
-        items_result = await session.execute(items_query)
-        items = items_result.scalar() or 0
+        row = sales_by_date.get(current)
+        if row:
+            tx_count = row.tx_count or 0
+            revenue = Decimal(str(row.revenue))
+            cogs = Decimal(str(row.cogs))
+        else:
+            tx_count = 0
+            revenue = Decimal("0")
+            cogs = Decimal("0")
+            
+        items = items_by_date.get(current, 0)
         
         total_revenue += revenue
         total_cogs += cogs
-        total_items += int(items)
+        total_items += items
         total_tx += tx_count
         
         # Track best/worst
@@ -1385,12 +1438,15 @@ async def _get_period_summary(session: AsyncSession, start: date, end: date) -> 
         if revenue > 0 and (worst_revenue is None or revenue < worst_revenue):
             worst_revenue = revenue
             worst_day = str(current)
-        
+            
         current += timedelta(days=1)
-    
+        
     gross_profit = total_revenue - total_cogs
     margin = (gross_profit / total_revenue * 100).quantize(Decimal("0.1")) if total_revenue > 0 else Decimal("0")
     avg_revenue = (total_revenue / Decimal(str(days))).quantize(Decimal("0.01")) if days > 0 else Decimal("0")
+    
+    net_profit = gross_profit - total_waste - total_opex
+    net_margin = (net_profit / total_revenue * 100).quantize(Decimal("0.1")) if total_revenue > 0 else Decimal("0")
     
     return {
         "days": days,
@@ -1405,6 +1461,10 @@ async def _get_period_summary(session: AsyncSession, start: date, end: date) -> 
         "best_revenue": best_revenue.quantize(Decimal("0.01")) if best_revenue else None,
         "worst_day": worst_day,
         "worst_revenue": worst_revenue.quantize(Decimal("0.01")) if worst_revenue else None,
+        "waste_amount": total_waste.quantize(Decimal("0.01")),
+        "opex_total": total_opex.quantize(Decimal("0.01")),
+        "net_profit": net_profit.quantize(Decimal("0.01")),
+        "net_margin_percent": net_margin,
     }
 
 

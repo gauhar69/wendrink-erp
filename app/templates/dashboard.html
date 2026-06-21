@@ -1130,9 +1130,9 @@
                 </div>
                 <div id="anRangeDate" style="display:none;gap:8px;align-items:center;">
                     <label style="font-size:12px;color:var(--text3);">С:</label>
-                    <input type="date" id="anStartDate" style="width:150px;">
+                    <input type="date" id="anStartDate" style="width:150px;" onchange="anLoad()">
                     <label style="font-size:12px;color:var(--text3);">По:</label>
-                    <input type="date" id="anEndDate" style="width:150px;">
+                    <input type="date" id="anEndDate" style="width:150px;" onchange="anLoad()">
                 </div>
                 <button class="btn btn-primary" onclick="anLoad()">🔄 Загрузить</button>
                 <button class="btn btn-ghost" onclick="anExportExcel()" style="margin-left:auto;">📥 Excel</button>
@@ -1174,6 +1174,16 @@
                         <div class="card-title">Маржа чистая</div>
                         <div class="kpi-value" id="anNetMargin" style="color:var(--green)">—</div>
                     </div>
+                    <div class="card" id="anFoodCostCard">
+                        <div class="card-title">Фуд-кост %</div>
+                        <div class="kpi-value" id="anFoodCost">—</div>
+                        <div class="kpi-sub" id="anFoodCostSub"></div>
+                    </div>
+                    <div class="card" id="anBreakevenCard">
+                        <div class="card-title">Безубыточность (день)</div>
+                        <div class="kpi-value" id="anBreakeven">—</div>
+                        <div class="kpi-sub" id="anBreakevenSub"></div>
+                    </div>
                     <div class="card">
                         <div class="card-title">Списания</div>
                         <div class="kpi-value" id="anWaste" style="color:var(--pink)">—</div>
@@ -1210,13 +1220,25 @@
 
                 <!-- Топ продуктов -->
                 <div class="card" style="margin-top:20px;">
-                    <div class="card-title">🏆 Топ-5 продуктов за период</div>
+                    <div style="display:flex;justify-content:between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:12px;">
+                        <div class="card-title" style="margin-bottom:0;">🏆 Анализ меню и товаров за период</div>
+                    </div>
+                    
+                    <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);">
+                        <span style="font-size:11px;color:var(--text3);text-transform:uppercase;font-weight:700;">Классификация ABC:</span>
+                        <button class="btn" id="abcFilterAll" onclick="anFilterAbc('all')" style="padding:4px 8px !important;font-size:11px !important;">Все</button>
+                        <button class="btn btn-ghost" id="abcFilterA" onclick="anFilterAbc('A')" style="padding:4px 8px !important;font-size:11px !important;color:var(--green)">A (Хиты: 80% выручки)</button>
+                        <button class="btn btn-ghost" id="abcFilterB" onclick="anFilterAbc('B')" style="padding:4px 8px !important;font-size:11px !important;color:var(--orange)">B (Средние: 15% выручки)</button>
+                        <button class="btn btn-ghost" id="abcFilterC" onclick="anFilterAbc('C')" style="padding:4px 8px !important;font-size:11px !important;color:var(--text3)">C (Аутсайдеры: 5% выручки)</button>
+                    </div>
+
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
                                     <th class="c" style="width:40px;">#</th>
                                     <th>Название</th>
+                                    <th class="c" style="width:70px;">Класс</th>
                                     <th class="r">Продано</th>
                                     <th class="r">Выручка</th>
                                     <th class="r">Прибыль</th>
@@ -1225,8 +1247,7 @@
                             </thead>
                             <tbody id="anTopProducts">
                                 <tr>
-                                    <td colspan="6" class="c" style="color:var(--text3);padding:20px;">Загрузи данные
-                                    </td>
+                                    <td colspan="7" class="c" style="color:var(--text3);padding:20px;">Загрузите данные</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2444,6 +2465,7 @@
                 'stocktake': loadStocktakes,
                 'audit': loadAudit,
                 'reports': loadReports,
+                'analytics': () => { anSetPeriod(anState.period || 'day'); },
             };
             if (loaders[name]) loaders[name]();
         }
@@ -3149,31 +3171,19 @@
 
             // 1. Trend (Выручка, Прибыль, OPEX)
             try {
-                const dates = [];
-                for (let i = 0; i < 7; i++) {
-                    let d = new Date(sd);
-                    d.setDate(d.getDate() + i);
-                    dates.push(d.toISOString().split('T')[0]);
-                }
-                const [rTrend, pnlResps] = await Promise.all([
-                    fetch(`${API}/charts/sales-trend?start_date=${start}&end_date=${end}`),
-                    Promise.all(dates.map(date => fetch(`${API}/reports/daily-pnl/${date}`).then(r => r.ok ? r.json() : null)))
-                ]);
+                const rTrend = await fetch(`${API}/charts/sales-trend?start_date=${start}&end_date=${end}`);
 
                 if (rTrend.ok) {
-                    const d = (await rTrend.json()).data || [];
-                    const rev = d.map(x => +x.revenue);
-                    const net = d.map(x => +x.net_profit);
-
-                    // Извлекаем OPEX из PnL
-                    const opTotals = pnlResps.map(pnl => {
-                        if (pnl) return parseFloat(pnl.total_opex || pnl.opex_total || 0);
-                        return 0;
-                    });
+                    const raw = await rTrend.json();
+                    const d = raw.data || [];
+                    const rev = d.map(x => parseFloat(x.revenue || 0));
+                    const net = d.map(x => parseFloat(x.net_profit || 0));
+                    const opTotals = d.map(x => parseFloat(x.opex || 0));
+                    const chartDates = d.map(x => x.business_date);
 
                     Plotly.newPlot('chartTrend', [
                         {
-                            x: d.map(x => x.business_date), y: rev, name: 'Выручка',
+                            x: chartDates, y: rev, name: 'Выручка',
                             type: 'scatter', mode: 'lines+markers',
                             line: { color: '#4d9dff', width: 2.5, shape: 'spline', smoothing: 0.8 },
                             marker: { size: 6, color: '#4d9dff', line: { color: 'rgba(255,255,255,0.6)', width: 1.5 } },
@@ -3181,7 +3191,7 @@
                             hovertemplate: '<b>%{x}</b><br>Выручка: <b>%{y:,.0f} ₸</b><extra></extra>'
                         },
                         {
-                            x: d.map(x => x.business_date), y: net, name: 'Прибыль',
+                            x: chartDates, y: net, name: 'Прибыль',
                             type: 'scatter', mode: 'lines+markers',
                             line: { color: '#00e5a0', width: 2.5, shape: 'spline', smoothing: 0.8 },
                             marker: { size: 6, color: '#00e5a0', line: { color: 'rgba(255,255,255,0.6)', width: 1.5 } },
@@ -3189,7 +3199,7 @@
                             hovertemplate: '<b>%{x}</b><br>Прибыль: <b>%{y:,.0f} ₸</b><extra></extra>'
                         },
                         {
-                            x: dates, y: opTotals, name: 'OPEX',
+                            x: chartDates, y: opTotals, name: 'OPEX',
                             type: 'scatter', mode: 'lines',
                             line: { dash: 'dot', color: '#ff6b8a', width: 2, shape: 'spline', smoothing: 0.5 },
                             hovertemplate: '<b>%{x}</b><br>OPEX: <b>%{y:,.0f} ₸</b><extra></extra>'
@@ -4932,6 +4942,13 @@
             if (type === 'custom') {
                 $('anSingleDate').style.display = 'none';
                 $('anRangeDate').style.display = 'flex';
+                
+                // Set default range: 1st of current month (based on S.date) to S.date
+                const d = new Date(S.date);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                $('anStartDate').value = `${yyyy}-${mm}-01`;
+                $('anEndDate').value = S.date;
             } else {
                 $('anSingleDate').style.display = 'flex';
                 $('anRangeDate').style.display = 'none';
@@ -4941,6 +4958,9 @@
             if (type === 'week' || type === 'month') {
                 $('anDate').value = S.date;
             }
+
+            // Automatically load data when switching periods
+            anLoad();
         }
 
         async function anLoad() {
@@ -4992,6 +5012,9 @@
             // Показываем блок результатов
             $('anResults').style.display = 'block';
 
+            // Количество дней в периоде для усреднения
+            const days = parseInt(data.days) || 1;
+
             // Основные метрики
             $('anRevenue').textContent = fmtM(data.revenue);
             $('anCogs').textContent = fmtM(data.cogs);
@@ -4999,12 +5022,49 @@
             $('anGross').textContent = fmtM(data.gross_profit);
 
             // OPEX - может быть как строка так и объект
-            const opex = data.opex_total || (data.opex ? data.opex.total : '0');
+            const opex = parseFloat(data.opex_total || (data.opex ? data.opex.total : '0') || 0);
             $('anOpex').textContent = fmtM(opex);
 
-            $('anNet').textContent = fmtM(parseFloat(data.net_profit) || 0);
-            $('anGrossMargin').textContent = (parseFloat(data.gross_margin_percent) || 0).toFixed(1) + '%';
-            $('anNetMargin').textContent = (parseFloat(data.net_margin_percent) || 0).toFixed(1) + '%';
+            const netProfit = parseFloat(data.net_profit || 0);
+            $('anNet').textContent = fmtM(netProfit);
+            
+            const grossMarginVal = parseFloat(data.gross_margin_percent || 0);
+            const netMarginVal = parseFloat(data.net_margin_percent || 0);
+            $('anGrossMargin').textContent = grossMarginVal.toFixed(1) + '%';
+            $('anNetMargin').textContent = netMarginVal.toFixed(1) + '%';
+
+            // --- ФУД-КОСТ % ---
+            const foodCostVal = 100 - grossMarginVal;
+            $('anFoodCost').textContent = foodCostVal.toFixed(1) + '%';
+            if (foodCostVal < 30) {
+                $('anFoodCost').style.color = 'var(--green)';
+                $('anFoodCostSub').textContent = 'Отличная маржинальность';
+                $('anFoodCostSub').style.color = 'var(--green)';
+            } else if (foodCostVal <= 40) {
+                $('anFoodCost').style.color = 'var(--yellow)';
+                $('anFoodCostSub').textContent = 'Нормальный фуд-кост';
+                $('anFoodCostSub').style.color = 'var(--yellow)';
+            } else {
+                $('anFoodCost').style.color = 'var(--red)';
+                $('anFoodCostSub').textContent = 'Дорогие ингредиенты!';
+                $('anFoodCostSub').style.color = 'var(--red)';
+            }
+
+            // --- ТОЧКА БЕЗУБЫТОЧНОСТИ ---
+            const dailyOpex = opex / days;
+            const grossMarginRatio = grossMarginVal / 100;
+            const breakevenDaily = grossMarginRatio > 0 ? (dailyOpex / grossMarginRatio) : 0;
+            $('anBreakeven').textContent = fmtM(breakevenDaily);
+            
+            const dailyRevenue = parseFloat(data.revenue || 0) / days;
+            const breakevenDiff = dailyRevenue - breakevenDaily;
+            if (breakevenDiff >= 0) {
+                $('anBreakevenSub').textContent = '🟢 Окупается на +' + fmt(Math.round(breakevenDiff)) + ' ₸/день';
+                $('anBreakevenSub').style.color = 'var(--green)';
+            } else {
+                $('anBreakevenSub').textContent = '🔴 До окупаемости: ' + fmt(Math.round(Math.abs(breakevenDiff))) + ' ₸/день';
+                $('anBreakevenSub').style.color = 'var(--red)';
+            }
 
             // Транзакции и средний чек
             const txCount = data.transaction_count || 0;
@@ -5013,8 +5073,8 @@
             $('anAvgCheck').textContent = 'Средний чек: ' + fmtM(avgCheck);
 
             // Цвет чистой прибыли
-            const netProfit = parseFloat(data.net_profit || 0);
             $('anNet').style.color = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
+            $('anNetMargin').style.color = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
 
             // Сравнение с предыдущим периодом (если есть)
             if (data.prev_revenue !== undefined && data.prev_revenue !== null) {
@@ -5035,6 +5095,71 @@
             } else {
                 $('anComparison').style.display = 'none';
             }
+        }
+
+        // Состояние фильтра ABC
+        anState.abcFilter = 'all';
+        anState.products = [];
+
+        function anFilterAbc(filter) {
+            anState.abcFilter = filter;
+            
+            // Стилизуем кнопки
+            ['All', 'A', 'B', 'C'].forEach(f => {
+                const btn = $('abcFilter' + f);
+                if (btn) {
+                    if (f.toLowerCase() === filter.toLowerCase()) {
+                        btn.className = 'btn';
+                    } else {
+                        btn.className = 'btn btn-ghost';
+                    }
+                }
+            });
+            
+            anRenderProducts();
+        }
+
+        function anRenderProducts() {
+            const tb = $('anTopProducts');
+            if (!tb) return;
+            
+            let filtered = anState.products;
+            if (anState.abcFilter !== 'all') {
+                filtered = anState.products.filter(p => p.abcClass === anState.abcFilter);
+            }
+            
+            if (filtered.length === 0) {
+                tb.innerHTML = '<tr><td colspan="7" class="c" style="color:var(--text3);padding:20px;">Нет товаров в данной категории</td></tr>';
+                return;
+            }
+            
+            tb.innerHTML = filtered.map((p, index) => {
+                let abcBadgeColor = 'var(--text3)';
+                let abcBadgeBg = 'rgba(255,255,255,0.06)';
+                if (p.abcClass === 'A') {
+                    abcBadgeColor = 'var(--green)';
+                    abcBadgeBg = 'rgba(0,229,160,0.1)';
+                } else if (p.abcClass === 'B') {
+                    abcBadgeColor = 'var(--orange)';
+                    abcBadgeBg = 'rgba(255,157,77,0.1)';
+                }
+                
+                return `
+                    <tr>
+                        <td class="c">${index + 1}</td>
+                        <td><b>${p.product_name}</b></td>
+                        <td class="c">
+                            <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:800;color:${abcBadgeColor};background:${abcBadgeBg};border:1px solid ${abcBadgeColor}33;">
+                                ${p.abcClass}
+                            </span>
+                        </td>
+                        <td class="r">${fmt(p.quantity_sold)}</td>
+                        <td class="r">${fmtM(p.revenue)}</td>
+                        <td class="r" style="color:var(--green);">${fmtM(p.profit)}</td>
+                        <td class="r">${parseFloat(p.margin_percent).toFixed(1)}%</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         async function anLoadTopProducts() {
@@ -5063,27 +5188,47 @@
                     end = $('anEndDate').value;
                 }
 
-                const r = await fetch(`${API}/reports/product-sales/top?start_date=${start}&end_date=${end}&limit=5&sort_by=revenue`);
+                // Загружаем до 50 товаров для корректного ABC-анализа
+                const r = await fetch(`${API}/reports/product-sales/top?start_date=${start}&end_date=${end}&limit=50&sort_by=revenue`);
                 if (!r.ok) return;
 
                 const data = await r.json();
-                const tb = $('anTopProducts');
+                const rawProducts = data.products || data || [];
 
-                if (!data.products || data.products.length === 0) {
-                    tb.innerHTML = '<tr><td colspan="6" class="c" style="color:var(--text3);padding:20px;">Нет данных</td></tr>';
+                if (rawProducts.length === 0) {
+                    anState.products = [];
+                    anRenderProducts();
                     return;
                 }
 
-                tb.innerHTML = data.products.map(p => `
-            <tr>
-                <td class="c">${p.rank}</td>
-                <td>${p.product_name}</td>
-                <td class="r">${fmt(p.quantity_sold)}</td>
-                <td class="r">${fmtM(p.revenue)}</td>
-                <td class="r" style="color:var(--green);">${fmtM(p.profit)}</td>
-                <td class="r">${p.margin_percent}%</td>
-            </tr>
-        `).join('');
+                // Сортируем по убыванию выручки
+                const sorted = [...rawProducts].sort((a, b) => parseFloat(b.revenue || 0) - parseFloat(a.revenue || 0));
+                
+                // Считаем общую выручку
+                const totalRevenue = sorted.reduce((sum, p) => sum + parseFloat(p.revenue || 0), 0);
+                
+                // Классифицируем по ABC
+                let runningSum = 0;
+                anState.products = sorted.map(p => {
+                    const rev = parseFloat(p.revenue || 0);
+                    runningSum += rev;
+                    const share = totalRevenue > 0 ? (runningSum / totalRevenue) : 0;
+                    
+                    let abcClass = 'C';
+                    if (share <= 0.80) {
+                        abcClass = 'A';
+                    } else if (share <= 0.95) {
+                        abcClass = 'B';
+                    }
+                    
+                    return {
+                        ...p,
+                        abcClass: abcClass
+                    };
+                });
+
+                // Отрисовываем продукты с учетом текущего фильтра
+                anRenderProducts();
             } catch (e) {
                 console.error('Top products error:', e);
             }
