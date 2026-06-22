@@ -1708,7 +1708,8 @@ async def get_cogs_variance(
             theoretical_by_ingredient[ingredient_key]["cost"] += recipe_cost
 
     theoretical_cogs_total = sum(
-        p["theoretical_cogs"] for p in theoretical_by_product.values()
+        (p["theoretical_cogs"] for p in theoretical_by_product.values()),
+        Decimal("0.00")
     )
 
     # ==========================================================================
