@@ -3003,9 +3003,9 @@
                             ${dowSummary}
                             <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--bg3);">
                                 <div style="font-size:10.5px;color:var(--text3);margin-bottom:3px;">Лучший день</div>
-                                <div style="font-size:12.5px;font-weight:700;color:#1D9E75;">${bestDate ? bestDate.slice(5).replace('-','.') + ' · ' + fmtM(bestRev) : '—'}</div>
+                                <div style="font-size:12.5px;font-weight:700;color:#1D9E75;">${bestDate ? bestDate.slice(8) + '.' + bestDate.slice(5,7) + ' · ' + fmtM(bestRev) : '—'}</div>
                                 <div style="font-size:10.5px;color:var(--text3);margin-top:7px;margin-bottom:3px;">Худший день</div>
-                                <div style="font-size:12.5px;font-weight:700;color:#E24B4A;">${worstDate && worstRev < Infinity ? worstDate.slice(5).replace('-','.') + ' · ' + fmtM(worstRev) : '—'}</div>
+                                <div style="font-size:12.5px;font-weight:700;color:#E24B4A;">${worstDate && worstRev < Infinity ? worstDate.slice(8) + '.' + worstDate.slice(5,7) + ' · ' + fmtM(worstRev) : '—'}</div>
                                 <div style="font-size:10.5px;color:var(--text3);margin-top:7px;margin-bottom:3px;">Средний день</div>
                                 <div style="font-size:12.5px;font-weight:700;color:var(--text);">${daysWithData > 0 ? fmtM(Math.round(totalRev/daysWithData)) : '—'}</div>
                             </div>
@@ -3051,10 +3051,7 @@
                     subtitle.textContent = `${topN} ${word} делают 80% выручки · остальные ${products.length - topN} дают 20%`;
                 }
 
-                const names = withCum.map(p => {
-                    const n = p.product_name || p.name || '';
-                    return n.length > 13 ? n.slice(0,12) + '…' : n;
-                });
+                const names = withCum.map(p => p.product_name || p.name || '');
                 const revs = withCum.map(p => parseFloat(p.revenue||p.total_revenue||0));
                 const cumPcts = withCum.map(p => p.cumPercent);
                 const colors = withCum.map((_,i) => i <= cutoffIdx ? '#1D9E75' : '#888780');
@@ -3083,13 +3080,13 @@
                 ], {
                     ...PL, height:300,
                     margin:{ t:16, b:72, l:50, r:46 },
-                    yaxis:{ ...PL.yaxis, rangemode:'tozero', tickformat:',.0f' },
+                    yaxis:{ ...PL.yaxis, type: 'linear', rangemode:'tozero', tickformat:',.0f' },
                     yaxis2:{
                         overlaying:'y', side:'right', range:[0,105],
                         tickformat:'.0f', ticksuffix:'%', showgrid:false,
                         tickfont:{ color:'#6b7585', size:10 }
                     },
-                    xaxis:{ ...PL.xaxis, tickangle:-38, tickfont:{ size:9 } },
+                    xaxis:{ ...PL.xaxis, type: 'category', tickangle:-38, tickfont:{ size:9 } },
                     showlegend:false, bargap:0.28
                 }, PC);
             } catch(e) {
