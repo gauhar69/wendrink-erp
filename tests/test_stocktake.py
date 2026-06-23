@@ -98,3 +98,49 @@ async def test_stocktake_reapply_idempotency_marker(db_session):
     # Verify adjustments_applied_at is set in the DB
     await db_session.refresh(completed)
     assert completed.adjustments_applied_at is not None
+
+
+@pytest.mark.asyncio
+async def test_delete_draft_stocktake_cascades_items(db_session):
+    """Test that deleting a draft stocktake successfully removes it and cascades to items."""
+    # 1. Create a test ingredient
+    milk = Ingredient(
+        name="Молоко",
+        sku="ING-MILK",
+        unit="мл",
+        package_size=Decimal("1000.0")
+    )
+    db_session.add(milk)
+    await db_session.flush()
+    
+    # 2. Create a stocktake draft
+    stocktake = Stocktake(
+        status=StocktakeStatus.DRAFT.value,
+        business_date=date(2026, 6, 23),
+        conducted_by="Тестер"
+    )
+    db_session.add(stocktake)
+    await db_session.flush()
+    
+    # Add a stocktake item
+    item = StocktakeItem(
+        stocktake_id=stocktake.id,
+        ingredient_id=milk.id,
+        expected_quantity=Decimal("500.0"),
+        actual_quantity=Decimal("450.0"),
+        unit_cost=Decimal("2.0")
+    )
+    db_session.add(item)
+    await db_session.flush()
+    
+    # Verify they exist
+    assert await db_session.get(Stocktake, stocktake.id) is not None
+    assert await db_session.get(StocktakeItem, item.id) is not None
+    
+    # 3. Delete the stocktake using ORM delete
+    await db_session.delete(stocktake)
+    await db_session.commit()
+    
+    # 4. Verify stocktake and item are both deleted
+    assert await db_session.get(Stocktake, stocktake.id) is None
+    assert await db_session.get(StocktakeItem, item.id) is None

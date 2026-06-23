@@ -314,30 +314,19 @@ async def delete_stocktake(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a draft stocktake."""
-    from sqlalchemy import text
     try:
         stocktake_uuid = UUID(stocktake_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid stocktake ID")
 
-    result = await db.execute(
-        text("SELECT id, status FROM stocktakes WHERE id = :id"),
-        {"id": str(stocktake_uuid)}
-    )
-    row = result.fetchone()
-    if not row:
+    from app.models.stocktake import Stocktake
+    stocktake = await db.get(Stocktake, stocktake_uuid)
+    if not stocktake:
         raise HTTPException(status_code=404, detail="Stocktake not found")
-    if row[1] == "completed":
+    if stocktake.status == "completed":
         raise HTTPException(status_code=400, detail="Cannot delete completed stocktake")
 
-    await db.execute(
-        text("DELETE FROM stocktake_items WHERE stocktake_id = :id"),
-        {"id": str(stocktake_uuid)}
-    )
-    await db.execute(
-        text("DELETE FROM stocktakes WHERE id = :id"),
-        {"id": str(stocktake_uuid)}
-    )
+    await db.delete(stocktake)
     await db.commit()
     return {"message": "Deleted"}
 
