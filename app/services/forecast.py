@@ -203,7 +203,7 @@ class InventoryForecastService:
         order_amount_value = predicted_daily * 30
         
         # Convert to packages
-        package_size = ingredient.package_size or 1
+        package_size = float(ingredient.package_size) if ingredient.package_size else 1.0
         packages_needed = int(order_amount_value / package_size) + 1
         order_amount = f"{packages_needed} уп."
         

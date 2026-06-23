@@ -546,15 +546,13 @@ class FinanceService:
             if daily_amount <= 0:
                 continue
 
-            # Idempotency check: Use stable category_code + prefix, NOT category_name
-            # This prevents duplicates if the setting's display name is renamed
+            # Idempotency check: Use exact description
             description = f"Daily Fixed Cost: {setting.category_name}"
 
             existing = await self.session.execute(
                 select(FinanceLedger)
                 .where(FinanceLedger.business_date == business_date)
-                .where(FinanceLedger.category == category_code)
-                .where(FinanceLedger.description.like("Daily Fixed Cost:%"))
+                .where(FinanceLedger.description == description)
             )
             if existing.scalars().first():
                 continue

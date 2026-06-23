@@ -60,9 +60,10 @@ class InventoryService:
         Get current Weighted Average Cost for an ingredient.
         
         WAC is taken from the most recent ledger entry.
+        If no history exists, falls back to ingredient.current_price or ingredient.initial_cost.
         
         Returns:
-            Current WAC or None if no history exists.
+            Current WAC or None if no history/costs exist.
         """
         result = await self.session.execute(
             select(InventoryLedger.weighted_average_cost)
@@ -71,7 +72,22 @@ class InventoryService:
             .limit(1)
         )
         wac = result.scalar()
-        return Decimal(str(wac)) if wac is not None else None
+        if wac is not None:
+            return Decimal(str(wac))
+            
+        # Fallback to Ingredient model costs
+        from app.models.ingredient import Ingredient
+        ing_result = await self.session.execute(
+            select(Ingredient).where(Ingredient.id == ingredient_id)
+        )
+        ingredient = ing_result.scalar_one_or_none()
+        if ingredient:
+            if ingredient.current_price is not None:
+                return Decimal(str(ingredient.current_price))
+            if ingredient.initial_cost is not None:
+                return Decimal(str(ingredient.initial_cost))
+                
+        return None
     
     async def get_all_balances(self) -> list[dict]:
         """
